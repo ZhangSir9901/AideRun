@@ -1,4 +1,4 @@
-// AideRun - 860x560 水晶玻璃拟态 WebView2 控制台、启动前置子窗口编排、防闪退护盾与系统托盘事件引擎
+// AideRun - 1120x700 水晶玻璃拟态 WebView2 控制台、启动前置子窗口编排、防闪退护盾与系统托盘事件引擎
 
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -9,7 +9,7 @@ use std::time::Duration;
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use tao::dpi::LogicalSize;
+use tao::dpi::{LogicalSize, PhysicalPosition};
 use tao::event::{Event, WindowEvent};
 use tao::event_loop::{ControlFlow, EventLoopBuilder, EventLoopProxy, EventLoopWindowTarget};
 use tao::platform::windows::WindowBuilderExtWindows;
@@ -42,9 +42,10 @@ use crate::preboot_gui::{
 };
 use crate::process::{find_active_processes_in_root, find_blocking_ide_processes};
 use crate::proxy::{
-    auto_detect_google_proxy, check_proxy_reachable, read_config_json_proxy,
+    auto_detect_google_proxy, check_proxy_reachable, parse_proxy_string, read_config_json_proxy,
     read_windows_system_proxy, ProxyEndpoint,
 };
+use crate::relocate::auto_relocate_portable_env;
 use crate::sanitize::run_sanitize;
 use crate::scoop_heal::is_ntfs_volume;
 use crate::self_update::{
@@ -59,6 +60,11 @@ use crate::upgrade::{
     check_latest_release, compare_semver, execute_upgrade, is_inno_setup_installer,
     read_local_versions, rollback_upgrade,
 };
+
+/// 控制台主窗口与所有前置引导子窗口统一的逻辑像素宽度
+pub const APP_WINDOW_WIDTH: f64 = 1120.0;
+/// 控制台主窗口与所有前置引导子窗口统一的逻辑像素高度
+pub const APP_WINDOW_HEIGHT: f64 = 700.0;
 
 const PANEL_TITLE: &str = "AideRun - Antigravity IDE 便携控制台";
 const PANEL_HTML_TEMPLATE: &str = include_str!("../assets/panel.html");
@@ -122,7 +128,6 @@ struct DashboardState {
     proxy_text: String,
     ntfs: bool,
     active_procs: Vec<ActiveProcItem>,
-    auto_clean_on_exit: bool,
     smart_clean: bool,
     projects: Vec<ProjectItem>,
     instances: Vec<String>,
@@ -149,6 +154,7 @@ struct SharedApp {
     busy_self_update: Arc<AtomicBool>,
     smart_boot_checked: Arc<AtomicBool>,
     self_update_checked: Arc<AtomicBool>,
+    startup_notice: Arc<Mutex<Option<(String, String)>>>,
 }
 
 struct BusyGuard(Arc<AtomicBool>);
@@ -237,19 +243,36 @@ fn cleanup_preboot_resources(
     }
 }
 
+/// 将任意窗口居中定位到其所在（或主）显示器的正中央，确保子窗口与主面板无缝原地衔接
+pub(crate) fn center_window_on_monitor(window: &Window) {
+    let Some(mon) = window
+        .current_monitor()
+        .or_else(|| window.primary_monitor())
+    else {
+        return;
+    };
+    let mon_pos = mon.position();
+    let mon_size = mon.size();
+    let win_size = window.outer_size();
+    let x = mon_pos.x + (mon_size.width as i32 - win_size.width as i32) / 2;
+    let y = mon_pos.y + (mon_size.height as i32 - win_size.height as i32) / 2;
+    window.set_outer_position(PhysicalPosition::new(x, y));
+}
+
 fn build_main_runtime(
     el_target: &EventLoopWindowTarget<AppEvent>,
     win_icon: &WindowIcon,
     el_proxy: &EventLoopProxy<AppEvent>,
     paths: PortablePaths,
     cfg: LauncherConfig,
+    startup_notice: Option<(String, String)>,
 ) -> Result<MainRuntime> {
     let webview2_cache = paths.cache_dir.join("webview2");
     std::fs::create_dir_all(&webview2_cache)?;
 
     let window = WindowBuilder::new()
         .with_title(PANEL_TITLE)
-        .with_inner_size(LogicalSize::new(860.0, 560.0))
+        .with_inner_size(LogicalSize::new(APP_WINDOW_WIDTH, APP_WINDOW_HEIGHT))
         .with_decorations(false)
         .with_transparent(true)
         .with_resizable(false)
@@ -258,6 +281,8 @@ fn build_main_runtime(
         .with_taskbar_icon(Some(win_icon.clone()))
         .build(el_target)
         .context("创建 WebView 宿主窗口失败")?;
+
+    center_window_on_monitor(&window);
 
     let html_content = render_panel_html();
     let mut web_context = WebContext::new(Some(webview2_cache));
@@ -281,7 +306,7 @@ fn build_main_runtime(
     let item_launch = MenuItem::new("启动主环境 Antigravity IDE", true, None);
     let item_multi = MenuItem::new("多开新项目窗口...", true, None);
     let item_shell = MenuItem::new("打开便携 PowerShell", true, None);
-    let item_check = MenuItem::new("Win 检测与升级...", true, None);
+    let item_check = MenuItem::new("检测与升级...", true, None);
     let item_quit = MenuItem::new("退出 AideRun", true, None);
 
     let mut menu_map: HashMap<String, &'static str> = HashMap::new();
@@ -349,6 +374,7 @@ fn build_main_runtime(
         busy_self_update: Arc::new(AtomicBool::new(false)),
         smart_boot_checked: Arc::new(AtomicBool::new(false)),
         self_update_checked: Arc::new(AtomicBool::new(false)),
+        startup_notice: Arc::new(Mutex::new(startup_notice)),
     };
 
     // 启动后台轻量守护线程：监听 IDE 进程退出后执行「程序智能清理」
@@ -369,15 +395,37 @@ fn prepare_ready_env_and_proxy(
     cfg: &mut LauncherConfig,
     detected_proxy: Option<&ProxyEndpoint>,
     save_manual: bool,
-) -> Result<()> {
+) -> Result<Option<(String, String)>> {
     // 先将已知可用代理写入当前进程环境变量，确保原地解包下载组件可直接走代理
     apply_proxy_and_tools_to_self(paths, cfg, detected_proxy);
     ensure_portable_ready(paths, cfg, false)?;
     apply_confirmed_proxy_to_cfg(paths, cfg, detected_proxy, save_manual);
-    Ok(())
+    let mut notice = None;
+    match auto_relocate_portable_env(paths, &cfg.toolchain, false) {
+        Ok(rep) if rep.migrated => {
+            notice = Some((
+                "ok".to_string(),
+                format!(
+                    "检测到便携盘符/目录迁移（{} -> {}），已自动重定位 {} 个配置文件（{} 处路径）",
+                    rep.old_root.as_deref().unwrap_or("历史目录"),
+                    rep.new_root,
+                    rep.files_rewritten,
+                    rep.replacements_applied
+                ),
+            ));
+        }
+        Err(err) => {
+            notice = Some((
+                "warn".to_string(),
+                format!("跨盘符路径自动重定位出现异常（已回退保护原配置）：{err:#}"),
+            ));
+        }
+        _ => {}
+    }
+    Ok(notice)
 }
 
-/// 启动 860x560 水晶磨砂启动面板，并编排启动前置代理检测与便携环境 deploy 子窗口
+/// 启动 1120x700 水晶磨砂启动面板，并编排启动前置代理检测与便携环境 deploy 子窗口
 pub fn run_panel() -> Result<()> {
     if try_focus_existing_panel() {
         return Ok(());
@@ -402,13 +450,15 @@ pub fn run_panel() -> Result<()> {
 
     let mut active_ui: Option<ActiveUi> =
         if probe_report.reachable && env_status != PortableEnvStatus::MissingIdeEnvironment {
-            prepare_ready_env_and_proxy(&paths, &mut cfg, last_working_proxy.as_ref(), false)?;
+            let startup_notice =
+                prepare_ready_env_and_proxy(&paths, &mut cfg, last_working_proxy.as_ref(), false)?;
             Some(ActiveUi::Main(build_main_runtime(
                 &event_loop,
                 &win_icon,
                 &el_proxy,
                 paths.clone(),
                 cfg.clone(),
+                startup_notice,
             )?))
         } else {
             // 将临时 WebView2 上下文严格隔离在系统 %TEMP%，用户确认部署前绝不污染当前目录
@@ -619,13 +669,14 @@ pub fn run_panel() -> Result<()> {
                             last_working_proxy.as_ref(),
                             pending_save_manual,
                         )
-                        .and_then(|()| {
+                        .and_then(|startup_notice| {
                             build_main_runtime(
                                 el_target,
                                 &win_icon,
                                 &el_proxy,
                                 paths.clone(),
                                 cfg.clone(),
+                                startup_notice,
                             )
                         }) {
                             Ok(main_rt) => active_ui = Some(ActiveUi::Main(main_rt)),
@@ -655,6 +706,7 @@ pub fn run_panel() -> Result<()> {
                         &el_proxy,
                         paths.clone(),
                         cfg.clone(),
+                        None,
                     ) {
                         Ok(main_rt) => active_ui = Some(ActiveUi::Main(main_rt)),
                         Err(err) => {
@@ -764,6 +816,14 @@ fn handle_worker_action(app: &SharedApp, action: &str, payload: Value) {
                 }
             }
             push_state(app);
+            if let Some((level, msg)) = app
+                .startup_notice
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .take()
+            {
+                emit_status(&app.proxy, &level, &msg, None);
+            }
 
             // 启动主面板后在后台静默检查一次 AideRun 本体新版本（发现新版触发底栏呼吸提醒）
             if !app.self_update_checked.swap(true, AtomicOrdering::SeqCst) {
@@ -860,12 +920,8 @@ fn handle_worker_action(app: &SharedApp, action: &str, payload: Value) {
             }
         }
         "toggle_setting" => {
-            let auto_clean_req = payload.get("auto_clean_on_exit").and_then(|x| x.as_bool());
             let smart_clean_req = payload.get("smart_clean").and_then(|x| x.as_bool());
             let cfg = update_cfg(app, |c| {
-                if let Some(v) = auto_clean_req {
-                    c.launch.auto_clean_on_exit = v;
-                }
                 if let Some(v) = smart_clean_req {
                     c.launch.smart_clean = v;
                 }
@@ -1445,12 +1501,20 @@ fn build_dashboard_state(
         ide_installed && !paths.resources_dir.is_dir() && is_inno_setup_installer(&paths.ide_exe);
     let (ide_version, _) = read_local_versions(paths);
 
-    let proxy_text = if let Some(ep) = read_config_json_proxy(&paths.proxy_config) {
+    let manual_ep = if cfg.proxy.lock_manual {
+        cfg.proxy
+            .manual_proxy
+            .as_deref()
+            .and_then(parse_proxy_string)
+    } else {
+        None
+    };
+    let proxy_text = if let Some(ep) = manual_ep.or_else(|| read_config_json_proxy(&paths.proxy_config)) {
         let ok = check_proxy_reachable(&ep);
-        format!("{} ({})", ep.all_proxy_url(), if ok { "通畅" } else { "未通" })
+        format!("{} ({})", ep.masked_url(), if ok { "通畅" } else { "未通" })
     } else if let Some(sys) = read_windows_system_proxy() {
         let ok = check_proxy_reachable(&sys);
-        format!("系统 {} ({})", sys.all_proxy_url(), if ok { "通畅" } else { "未通" })
+        format!("系统 {} ({})", sys.masked_url(), if ok { "通畅" } else { "未通" })
     } else {
         "直连模式（未发现活跃代理）".to_string()
     };
@@ -1485,7 +1549,6 @@ fn build_dashboard_state(
         proxy_text,
         ntfs: is_ntfs_volume(&paths.root),
         active_procs,
-        auto_clean_on_exit: cfg.launch.auto_clean_on_exit,
         smart_clean: cfg.launch.smart_clean,
         projects,
         instances,
@@ -1688,5 +1751,19 @@ mod tests {
             }
         }
         assert!(resolve_tool_preset("nonexistent").is_none());
+    }
+
+    #[test]
+    fn unified_window_dimensions_and_panel_nav_labels_match_spec() {
+        assert_eq!(super::APP_WINDOW_WIDTH, 1120.0);
+        assert_eq!(super::APP_WINDOW_HEIGHT, 700.0);
+        for expected in ["启动与多开", "清理与打包", "检测与升级", "全组件管理"] {
+            assert!(
+                super::PANEL_HTML_TEMPLATE.contains(expected),
+                "主面板导航缺失预期菜单文字: {expected}"
+            );
+        }
+        assert!(!super::PANEL_HTML_TEMPLATE.contains(">Win检测升级<"));
+        assert!(!super::PANEL_HTML_TEMPLATE.contains(">组件管理<"));
     }
 }

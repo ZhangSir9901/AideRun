@@ -1,4 +1,4 @@
-<!-- AideRun - Antigravity IDE 860x560 水晶磨砂高透玻璃拟态启动面板界面 -->
+<!-- AideRun - Antigravity IDE 1120x700 水晶磨砂高透玻璃拟态启动面板界面 -->
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -62,12 +62,12 @@
     z-index: 0;
   }
   .aurora-orb-a {
-    width: 390px; height: 390px; top: -120px; left: -80px;
+    width: 480px; height: 480px; top: -150px; left: -100px;
     background: radial-gradient(circle, var(--hsl-primary) 0%, transparent 70%);
     opacity: 0.72;
   }
   .aurora-orb-b {
-    width: 420px; height: 420px; bottom: -140px; right: -70px;
+    width: 520px; height: 520px; bottom: -160px; right: -90px;
     background: radial-gradient(circle, var(--hsl-secondary) 0%, transparent 72%);
     opacity: 0.68;
   }
@@ -75,8 +75,8 @@
   .titlebar {
     position: relative;
     z-index: 2;
-    height: 50px;
-    padding: 0 14px;
+    height: 58px;
+    padding: 0 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -85,35 +85,35 @@
     cursor: default;
   }
 
-  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand { display: flex; align-items: center; gap: 12px; }
   .brand-logo {
-    width: 28px; height: 28px; object-fit: contain;
+    width: 34px; height: 34px; object-fit: contain;
     filter: drop-shadow(0 2px 4px rgba(26, 37, 47, 0.16));
     pointer-events: none;
   }
-  .brand-title { display: flex; flex-direction: column; line-height: 1.15; }
+  .brand-title { display: flex; flex-direction: column; line-height: 1.2; }
   .brand-name {
-    font-size: 14px; font-weight: 700; letter-spacing: 0.3px;
-    color: var(--text-dark); display: flex; align-items: center; gap: 6px;
+    font-size: 17px; font-weight: 700; letter-spacing: 0.4px;
+    color: var(--text-dark); display: flex; align-items: center; gap: 7px;
   }
   .ver-pill {
-    font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 99px;
+    font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 99px;
     background: rgba(255, 255, 255, 0.38);
     border: 1px solid rgba(255, 255, 255, 0.55);
     color: var(--text-dark);
   }
-  .brand-sub { font-size: 10.5px; color: var(--text-muted); max-width: 215px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .brand-sub { font-size: 12px; color: var(--text-muted); max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   .nav-tabs {
-    display: flex; align-items: center; gap: 4px; padding: 3px;
-    border-radius: 12px;
+    display: flex; align-items: center; gap: 6px; padding: 4px;
+    border-radius: 14px;
     background: rgba(255, 255, 255, 0.22);
     border: 1px solid rgba(255, 255, 255, 0.36);
   }
   .tab-pill {
     border: none; background: transparent; color: var(--text-muted);
-    font-family: inherit; font-size: 12px; font-weight: 600;
-    padding: 5px 12px; border-radius: 9px; cursor: pointer;
+    font-family: inherit; font-size: 14px; font-weight: 600;
+    padding: 7px 17px; border-radius: 10px; cursor: pointer;
     transition: all 0.18s ease;
   }
   .tab-pill:hover { color: var(--text-dark); background: rgba(255, 255, 255, 0.32); }
@@ -122,12 +122,12 @@
     box-shadow: 0 2px 6px rgba(26, 37, 47, 0.08);
   }
 
-  .win-actions { display: flex; align-items: center; gap: 6px; }
+  .win-actions { display: flex; align-items: center; gap: 8px; }
   .win-btn {
-    width: 28px; height: 28px; border-radius: 9px;
+    width: 34px; height: 34px; border-radius: 10px;
     border: 1px solid rgba(255, 255, 255, 0.38);
     background: rgba(255, 255, 255, 0.22);
-    color: var(--text-dark); font-size: 13px; font-weight: 700;
+    color: var(--text-dark); font-size: 15px; font-weight: 700;
     cursor: pointer; display: flex; align-items: center; justify-content: center;
     transition: all 0.15s ease;
   }
@@ -136,11 +136,11 @@
 
   .main-stage {
     position: relative; z-index: 2; flex: 1;
-    padding: 12px 14px 10px; overflow: hidden;
+    padding: 16px 20px 14px; overflow: hidden;
     display: flex; flex-direction: column;
   }
 
-  .tab-view { display: none; height: 100%; flex-direction: column; gap: 10px; min-height: 0; }
+  .tab-view { display: none; height: 100%; flex-direction: column; gap: 14px; min-height: 0; }
   .tab-view.active { display: flex; }
 
   .glass-card {
@@ -151,15 +151,15 @@
     box-shadow:
       0 6px 20px rgba(26, 37, 47, 0.055),
       inset 0 1px 0 rgba(255, 255, 255, 0.55);
-    padding: 12px 15px;
+    padding: 16px 20px;
     display: flex;
     flex-direction: column;
   }
 
-  .card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 8px; }
-  .card-title { font-size: 13px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 6px; }
+  .card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 10px; }
+  .card-title { font-size: 15.5px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 8px; }
   .card-badge {
-    font-size: 10.5px; font-weight: 600; padding: 2px 8px; border-radius: 99px;
+    font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 99px;
     background: rgba(255, 255, 255, 0.42);
     border: 1px solid rgba(255, 255, 255, 0.58);
     color: var(--text-dark); white-space: nowrap;
@@ -169,16 +169,16 @@
   .badge-err { background: rgba(239, 68, 68, 0.16); border-color: rgba(239, 68, 68, 0.36); color: #8c1c1c; }
   .badge-info { background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.35); color: #1e40af; }
 
-  .grid-2 { display: grid; grid-template-columns: 1.02fr 1.18fr; gap: 11px; flex: 1; min-height: 0; }
-  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-  .col-stack { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1.18fr; gap: 15px; flex: 1; min-height: 0; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .col-stack { display: flex; flex-direction: column; gap: 14px; min-height: 0; }
 
   .btn {
     border: 1px solid rgba(255, 255, 255, 0.55); border-radius: 11px;
-    font-family: inherit; font-size: 12px; font-weight: 600;
+    font-family: inherit; font-size: 13.5px; font-weight: 600;
     color: var(--text-dark); background: rgba(255, 255, 255, 0.42);
-    padding: 7px 12px; cursor: pointer; transition: all 0.16s ease;
-    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 9px 15px; cursor: pointer; transition: all 0.16s ease;
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
     white-space: nowrap;
   }
   .btn:hover:not(:disabled) {
@@ -219,83 +219,83 @@
     background: rgba(239, 68, 68, 0.84);
     color: #ffffff;
   }
-  .btn-hero { width: 100%; padding: 11px 16px; font-size: 13.5px; border-radius: 13px; }
-  .btn-sm { padding: 5px 10px; font-size: 11.5px; border-radius: 9px; }
-  .btn-xs { padding: 3px 8px; font-size: 11px; border-radius: 8px; }
+  .btn-hero { width: 100%; padding: 14px 18px; font-size: 15.5px; border-radius: 14px; }
+  .btn-sm { padding: 7px 13px; font-size: 12.8px; border-radius: 9px; }
+  .btn-xs { padding: 4px 10px; font-size: 12px; border-radius: 8px; }
 
   .glass-input {
     background: var(--input-bg); border: 1px solid var(--input-stroke);
-    border-radius: 10px; color: var(--text-dark);
-    font-family: inherit; font-size: 12px; font-weight: 500;
-    padding: 7px 10px; outline: none;
+    border-radius: 11px; color: var(--text-dark);
+    font-family: inherit; font-size: 13.5px; font-weight: 500;
+    padding: 9px 13px; outline: none;
     box-shadow: inset 0 1px 2px rgba(26, 37, 47, 0.05);
     user-select: text;
   }
   .glass-input::placeholder { color: rgba(26, 37, 47, 0.45); }
   .glass-input:focus { background: rgba(255, 255, 255, 0.42); border-color: rgba(59, 130, 246, 0.55); }
 
-  .kv-list { display: flex; flex-direction: column; gap: 6px; font-size: 11.8px; }
+  .kv-list { display: flex; flex-direction: column; gap: 9px; font-size: 13.5px; }
   .kv-row {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 4px 8px; border-radius: 9px; background: rgba(255, 255, 255, 0.22);
+    padding: 8px 12px; border-radius: 10px; background: rgba(255, 255, 255, 0.22);
   }
   .kv-k { color: var(--text-muted); font-weight: 500; }
   .kv-v {
-    color: var(--text-dark); font-weight: 600; max-width: 225px;
+    color: var(--text-dark); font-weight: 600; max-width: 290px;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap; user-select: text;
   }
 
   .scroll-list {
     flex: 1; overflow-y: auto; display: flex; flex-direction: column;
-    gap: 5px; padding-right: 3px; min-height: 0;
+    gap: 7px; padding-right: 4px; min-height: 0;
   }
-  .scroll-list::-webkit-scrollbar { width: 5px; }
+  .scroll-list::-webkit-scrollbar { width: 6px; }
   .scroll-list::-webkit-scrollbar-thumb { background: rgba(26, 37, 47, 0.18); border-radius: 99px; }
 
   .proj-item {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 6px 9px; border-radius: 10px;
+    padding: 9px 12px; border-radius: 11px;
     background: rgba(255, 255, 255, 0.26);
-    border: 1px solid rgba(255, 255, 255, 0.42); font-size: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.42); font-size: 13.5px;
   }
   .proj-name {
     font-weight: 600; color: var(--text-dark); overflow: hidden;
-    text-overflow: ellipsis; white-space: nowrap; max-width: 225px;
+    text-overflow: ellipsis; white-space: nowrap; max-width: 310px;
   }
 
-  .chip-wrap { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .chip-wrap { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
   .chip {
     border: 1px solid rgba(255, 255, 255, 0.52); background: rgba(255, 255, 255, 0.34);
-    border-radius: 99px; padding: 4px 10px; font-size: 11.5px; font-weight: 600;
+    border-radius: 99px; padding: 6px 13px; font-size: 12.8px; font-weight: 600;
     color: var(--text-dark); cursor: pointer; transition: all 0.14s ease;
   }
   .chip:hover { background: rgba(255, 255, 255, 0.72); }
 
   .switch-row {
     display: flex; align-items: center; justify-content: space-between;
-    font-size: 11.8px; color: var(--text-dark); padding: 2px 2px;
+    font-size: 13.2px; color: var(--text-dark); padding: 3px 2px;
   }
-  .switch-row label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 500; }
+  .switch-row label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 500; }
 
-  .desc-xs { font-size: 11.2px; color: var(--text-muted); line-height: 1.45; }
+  .desc-xs { font-size: 12.6px; color: var(--text-muted); line-height: 1.52; }
 
-  /* 通用玻璃明细表格（用于 Tab 2 垃圾组成 & Tab 4 组件管理平台） */
+  /* 通用玻璃明细表格（用于 Tab 2 垃圾组成 & Tab 4 全组件管理平台） */
   .glass-table {
-    width: 100%; border-collapse: separate; border-spacing: 0 5px;
-    font-size: 11.8px;
+    width: 100%; border-collapse: separate; border-spacing: 0 6px;
+    font-size: 13.2px;
   }
   .glass-table thead th {
     position: sticky; top: 0; z-index: 1;
     background: rgba(235, 243, 253, 0.90);
     backdrop-filter: blur(8px);
-    text-align: left; font-size: 11px; font-weight: 700; color: var(--text-muted);
-    padding: 5px 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+    text-align: left; font-size: 12.2px; font-weight: 700; color: var(--text-muted);
+    padding: 7px 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.5);
   }
   .glass-table tbody tr td {
     background: rgba(255, 255, 255, 0.24);
     border-top: 1px solid rgba(255, 255, 255, 0.42);
     border-bottom: 1px solid rgba(255, 255, 255, 0.30);
-    padding: 6px 8px;
+    padding: 9px 10px;
     vertical-align: middle;
   }
   .glass-table tbody tr td:first-child {
@@ -307,13 +307,13 @@
     border-top-right-radius: 10px; border-bottom-right-radius: 10px;
   }
   .glass-table tbody tr:hover td { background: rgba(255, 255, 255, 0.44); }
-  .mono-xs { font-family: "Cascadia Mono", Consolas, monospace; font-size: 11px; color: var(--text-muted); user-select: text; }
+  .mono-xs { font-family: "Cascadia Mono", Consolas, monospace; font-size: 12.2px; color: var(--text-muted); user-select: text; }
 
   .log-box {
-    flex: 1; min-height: 0; overflow-y: auto; border-radius: 11px;
+    flex: 1; min-height: 0; overflow-y: auto; border-radius: 12px;
     background: var(--input-bg); border: 1px solid var(--input-stroke);
-    padding: 8px 10px; font-family: "Cascadia Mono", Consolas, monospace;
-    font-size: 11px; line-height: 1.45; color: var(--text-dark);
+    padding: 11px 14px; font-family: "Cascadia Mono", Consolas, monospace;
+    font-size: 12.5px; line-height: 1.55; color: var(--text-dark);
     white-space: pre-wrap; user-select: text;
   }
 
@@ -322,27 +322,27 @@
     position: absolute; inset: 0; z-index: 20;
     background: rgba(26, 37, 47, 0.28);
     backdrop-filter: blur(8px);
-    display: none; align-items: center; justify-content: center; padding: 18px;
+    display: none; align-items: center; justify-content: center; padding: 22px;
   }
   .modal-mask.open { display: flex; }
   .modal-box {
-    width: 100%; max-width: 470px;
+    width: 100%; max-width: 540px;
     border-radius: 18px;
     background: rgba(242, 247, 255, 0.94);
     border: 1.5px solid rgba(255, 255, 255, 0.72);
     box-shadow: 0 18px 42px rgba(26, 37, 47, 0.20);
-    padding: 16px 18px;
-    display: flex; flex-direction: column; gap: 11px;
+    padding: 20px 22px;
+    display: flex; flex-direction: column; gap: 14px;
   }
 
   .preset-bar {
-    display: flex; align-items: center; gap: 6px; flex-wrap: nowrap;
-    padding: 5px 9px; margin-bottom: 7px; border-radius: 10px;
+    display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;
+    padding: 8px 12px; margin-bottom: 10px; border-radius: 12px;
     background: rgba(255, 255, 255, 0.24);
     border: 1px solid rgba(255, 255, 255, 0.45);
     overflow-x: auto;
   }
-  .preset-label { font-size: 11.2px; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
+  .preset-label { font-size: 12.5px; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
   .btn-preset {
     background: rgba(255, 255, 255, 0.54);
     border-color: rgba(59, 130, 246, 0.26);
@@ -355,18 +355,18 @@
   }
 
   .statusbar {
-    position: relative; z-index: 2; height: 34px; padding: 0 15px;
+    position: relative; z-index: 2; height: 40px; padding: 0 20px;
     border-top: 1px solid rgba(255, 255, 255, 0.35);
     background: rgba(255, 255, 255, 0.18);
     display: flex; align-items: center; justify-content: space-between;
-    font-size: 11.3px; color: var(--text-dark);
+    font-size: 12.8px; color: var(--text-dark);
   }
   .status-left {
-    display: flex; align-items: center; gap: 7px;
+    display: flex; align-items: center; gap: 8px;
     overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
-    flex: 1; min-width: 0; margin-right: 12px;
+    flex: 1; min-width: 0; margin-right: 14px;
   }
-  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; flex-shrink: 0; }
+  .status-dot { width: 9px; height: 9px; border-radius: 50%; background: #10b981; flex-shrink: 0; }
   .status-dot.busy { background: #3b82f6; animation: pulse 1s infinite; }
   .status-dot.warn { background: #f59e0b; }
   .status-dot.err { background: #ef4444; }
@@ -374,7 +374,7 @@
   @keyframes updateBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.38; } }
 
   .status-right-wrap {
-    display: flex; align-items: center; gap: 7px; flex-shrink: 0;
+    display: flex; align-items: center; gap: 9px; flex-shrink: 0;
   }
   .btn-self-update-pill {
     display: none;
@@ -382,20 +382,20 @@
     background: rgba(239, 68, 68, 0.14);
     color: #b91c1c;
     font-family: inherit;
-    font-size: 11px; font-weight: 700;
-    padding: 2px 8px; border-radius: 999px;
+    font-size: 12px; font-weight: 700;
+    padding: 3px 11px; border-radius: 999px;
     cursor: pointer; white-space: nowrap;
     animation: updateBlink 1.4s ease-in-out infinite;
     transition: background 0.15s ease, transform 0.12s ease;
   }
-  .btn-self-update-pill.visible { display: inline-flex; align-items: center; gap: 4px; }
+  .btn-self-update-pill.visible { display: inline-flex; align-items: center; gap: 5px; }
   .btn-self-update-pill:hover {
     animation: none;
     background: rgba(239, 68, 68, 0.85); color: #ffffff;
     transform: translateY(-1px);
   }
   .icon-link-btn {
-    width: 22px; height: 22px; border-radius: 6px;
+    width: 26px; height: 26px; border-radius: 7px;
     border: 1px solid transparent; background: transparent;
     color: #5b6978; cursor: pointer;
     display: inline-flex; align-items: center; justify-content: center;
@@ -438,8 +438,8 @@
       <nav class="nav-tabs" aria-label="功能导航">
         <button class="tab-pill active" data-tab="launch">启动与多开</button>
         <button class="tab-pill" data-tab="clean">清理与打包</button>
-        <button class="tab-pill" data-tab="upgrade">Win检测升级</button>
-        <button class="tab-pill" data-tab="tools">组件管理</button>
+        <button class="tab-pill" data-tab="upgrade">检测与升级</button>
+        <button class="tab-pill" data-tab="tools">全组件管理</button>
       </nav>
 
       <div class="win-actions">
@@ -469,16 +469,16 @@
                 </div>
               </div>
 
-              <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+              <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 14px;">
                 <button class="btn btn-primary btn-hero" id="btn-launch-main">
                   🚀 启动 Antigravity IDE（并隐藏至托盘）
                 </button>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                   <button class="btn" id="btn-open-ps">⚡ 便携 PowerShell</button>
                   <button class="btn" id="btn-open-cmd">⌘ 便携 CMD</button>
                 </div>
                 <div class="switch-row">
-                  <label><input type="checkbox" id="chk-auto-clean" /> 静默启动退出后自动轻度清理</label>
+                  <span class="desc-xs">默认零桌面残留，按需创建快捷入口：</span>
                   <button class="btn btn-sm" id="btn-shortcut">📌 桌面快捷方式</button>
                 </div>
               </div>
@@ -491,7 +491,7 @@
                 <div class="card-title">项目并行多开 <span class="ver-pill">--new-window</span></div>
                 <button class="btn btn-sm" id="btn-pick-project">📂 打开任意目录</button>
               </div>
-              <div class="desc-xs" style="margin-bottom: 6px;">复用主账号与扩展库，每个项目以独立窗口同时开工：</div>
+              <div class="desc-xs" style="margin-bottom: 8px;">复用主账号与扩展库，每个项目以独立窗口同时开工：</div>
               <div class="scroll-list" id="project-list">
                 <div class="desc-xs">正在扫描 projects 目录...</div>
               </div>
@@ -500,11 +500,11 @@
             <div class="glass-card" style="flex: 0.92;">
               <div class="card-hd">
                 <div class="card-title">独立隔离分身多开 <span class="ver-pill">data/instances</span></div>
-                <label style="font-size: 11px; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                <label style="font-size: 12.5px; display: flex; align-items: center; gap: 5px; cursor: pointer;">
                   <input type="checkbox" id="chk-share-ext" checked /> 共享扩展
                 </label>
               </div>
-              <div style="display: flex; gap: 6px;">
+              <div style="display: flex; gap: 8px;">
                 <input class="glass-input" id="inp-instance-name" style="flex: 1;" placeholder="输入分身名，如 work-01 / review" />
                 <button class="btn btn-accent btn-sm" id="btn-launch-instance">新建并多开</button>
               </div>
@@ -518,23 +518,23 @@
 
       <!-- Tab 2: 清理与打包（垃圾组成明细 + 双动作 + 程序智能清理） -->
       <section class="tab-view" id="tab-clean">
-        <div class="glass-card" style="padding: 10px 15px; flex-direction: row; align-items: center; justify-content: space-between;">
+        <div class="glass-card" style="padding: 13px 20px; flex-direction: row; align-items: center; justify-content: space-between;">
           <div>
             <div class="card-title">data 便携目录总占用：<span id="lbl-data-total">--</span></div>
             <div class="desc-xs" id="lbl-clean-lock">正在检测当前目录进程锁状态...</div>
           </div>
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <label title="勾选后，当 IDE 退出或启动检测到日常垃圾达到阈值时自动后台清理" style="font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <label title="勾选后，当 IDE 退出或启动检测到日常垃圾达到阈值时自动后台清理" style="font-size: 13.2px; font-weight: 600; display: flex; align-items: center; gap: 7px; cursor: pointer;">
               <input type="checkbox" id="chk-smart-clean" /> 程序智能清理
             </label>
             <button class="btn btn-sm" id="btn-refresh-clean">🔄 刷新扫描</button>
           </div>
         </div>
 
-        <div class="glass-card" style="flex: 1; min-height: 0; padding: 11px 14px;">
-          <div class="card-hd" style="margin-bottom: 6px;">
+        <div class="glass-card" style="flex: 1; min-height: 0; padding: 14px 18px;">
+          <div class="card-hd" style="margin-bottom: 8px;">
             <div class="card-title">当前可清理垃圾组成明细</div>
-            <div style="display: flex; gap: 6px; align-items: center;">
+            <div style="display: flex; gap: 8px; align-items: center;">
               <span class="card-badge badge-info" id="badge-daily-total">日常可释: --</span>
               <span class="card-badge badge-warn" id="badge-pack-total">打包总可释: --</span>
             </div>
@@ -557,18 +557,18 @@
           </div>
         </div>
 
-        <div class="glass-card" style="padding: 10px 15px; flex-direction: row; align-items: center; justify-content: space-between;">
-          <div class="desc-xs" style="max-width: 440px;">
+        <div class="glass-card" style="padding: 13px 20px; flex-direction: row; align-items: center; justify-content: space-between;">
+          <div class="desc-xs" style="max-width: 580px;">
             完整保留用户设置、<code>settings.json</code>、扩展插件与 <code>projects/</code> 代码；智能保护当前面板运行目录。
           </div>
-          <div style="display: flex; gap: 9px;">
+          <div style="display: flex; gap: 10px;">
             <button class="btn btn-primary" id="btn-clean-daily">✨ 一键清理日常垃圾（推荐）</button>
             <button class="btn btn-accent" id="btn-clean-pack">📦 打包之前彻底清理</button>
           </div>
         </div>
       </section>
 
-      <!-- Tab 3: Windows 版检测与无痕升级（切换标签自动单次检测 + 去除多余检测按钮与冗余构建号） -->
+      <!-- Tab 3: 检测与升级（切换标签自动单次检测 + 去除多余检测按钮与冗余构建号） -->
       <section class="tab-view" id="tab-upgrade">
         <div class="glass-card">
           <div class="card-hd">
@@ -576,45 +576,45 @@
             <span class="card-badge" id="badge-unpacker">innounp-2 (Inno 6.4+)</span>
           </div>
 
-          <div class="grid-3" style="margin-bottom: 10px;">
-            <div class="kv-row" style="padding: 8px 10px;">
+          <div class="grid-3" style="margin-bottom: 12px;">
+            <div class="kv-row" style="padding: 10px 14px;">
               <span class="kv-k">当前本地版</span>
               <span class="kv-v" id="upg-local-ver">--</span>
             </div>
-            <div class="kv-row" style="padding: 8px 10px;">
+            <div class="kv-row" style="padding: 10px 14px;">
               <span class="kv-k">官方 Win 最新</span>
               <span class="kv-v" id="upg-remote-ver">切换自动检测</span>
             </div>
-            <div class="kv-row" style="padding: 8px 10px;">
+            <div class="kv-row" style="padding: 10px 14px;">
               <span class="kv-k">升级状态</span>
               <span class="kv-v" id="upg-state-lbl">待检测</span>
             </div>
           </div>
 
-          <div style="margin-bottom: 10px;">
+          <div style="margin-bottom: 12px;">
             <input class="glass-input" id="inp-upgrade-url" style="width: 100%;" readonly placeholder="切换到本标签后自动检索 windows-x64/Antigravity IDE.exe 官方直链（本次运行仅自动检测一次）..." />
           </div>
 
-          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <button class="btn btn-primary" id="btn-upgrade-online" disabled title="仅当检测到线上版本号大于本地版或选择本地安装包后激活">⬆ 一键在线无痕升级</button>
             <button class="btn" id="btn-upgrade-local">📁 选择本地安装包 (.exe / .zip)</button>
             <button class="btn btn-warn" id="btn-upgrade-rollback">↩ 秒级回滚旧版本</button>
           </div>
         </div>
 
-        <div class="glass-card" style="padding: 8px 14px; flex-direction: row; align-items: center; justify-content: space-between; gap: 10px;">
-          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 11.6px;">
+        <div class="glass-card" style="padding: 12px 18px; flex-direction: row; align-items: center; justify-content: space-between; gap: 12px;">
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13.2px;">
             <span style="font-weight: 700;">🚀 AideRun 启动器无感自升级</span>
             <span class="desc-xs">当前: <strong id="self-local-ver">--</strong> · 远端: <strong id="self-remote-ver">自动检测中</strong></span>
           </div>
-          <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
-            <button class="btn btn-xs" id="btn-check-self-update">🔍 检查自身</button>
-            <button class="btn btn-primary btn-xs" id="btn-run-self-update" disabled>⚡ 无感热替换升级</button>
+          <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+            <button class="btn btn-sm" id="btn-check-self-update">🔍 检查自身</button>
+            <button class="btn btn-primary btn-sm" id="btn-run-self-update" disabled>⚡ 无感热替换升级</button>
           </div>
         </div>
 
         <div class="glass-card" style="flex: 1; min-height: 0;">
-          <div class="card-hd" style="margin-bottom: 6px;">
+          <div class="card-hd" style="margin-bottom: 8px;">
             <div class="card-title">无痕升级护盾与操作日志</div>
             <span class="desc-xs">绝对保护 <code>data/</code> · <code>projects/</code> · <code>tools/</code> · <code>version.dll</code> · <code>config.json</code></span>
           </div>
@@ -622,14 +622,14 @@
         </div>
       </section>
 
-      <!-- Tab 4: 组件综合管理平台（彻底无 Scoop，展示安装状态 / 本地版本 / 最新版本 / 升级状态 / 装升卸） -->
+      <!-- Tab 4: 全组件管理平台（彻底无 Scoop，展示安装状态 / 本地版本 / 最新版本 / 升级状态 / 装升卸） -->
       <section class="tab-view" id="tab-tools">
-        <div class="glass-card" style="flex: 1; min-height: 0; padding: 11px 14px;">
-          <div class="card-hd" style="margin-bottom: 6px;">
+        <div class="glass-card" style="flex: 1; min-height: 0; padding: 14px 18px;">
+          <div class="card-hd" style="margin-bottom: 8px;">
             <div class="card-title">
               零软链接便携组件综合管理平台 <span class="ver-pill">tools/portable</span>
             </div>
-            <div style="display: flex; gap: 6px;">
+            <div style="display: flex; gap: 8px;">
               <button class="btn btn-sm" id="btn-open-doctor">🩺 环境自检</button>
               <button class="btn btn-sm" id="btn-open-add-custom">➕ 添加自定义组件</button>
               <button class="btn btn-primary btn-sm" id="btn-refresh-components">🔄 检测组件新版</button>
@@ -663,7 +663,7 @@
           </div>
         </div>
 
-        <div class="glass-card" style="padding: 9px 14px; flex-direction: row; align-items: center; justify-content: space-between;">
+        <div class="glass-card" style="padding: 12px 18px; flex-direction: row; align-items: center; justify-content: space-between;">
           <div class="desc-xs" id="lbl-tools-summary">
             所有组件均以零软链接绿色包部署至 <code>tools/portable/</code> 并自动注入便携 PATH，跨盘符拷贝即插即用。
           </div>
@@ -683,14 +683,14 @@
         <div class="desc-xs" style="color: var(--text-dark);">
           将全面清理日常运行垃圾及开发包下载/编译缓存（<code>pip / uv / npm / Go / Cargo</code>），为您最大程度压缩分发包体积；同时完整保留 <code>projects/</code> 源码与扩展。
         </div>
-        <label style="display: flex; align-items: flex-start; gap: 8px; padding: 9px 10px; border-radius: 11px; background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.34); cursor: pointer; font-size: 11.8px; line-height: 1.45;">
-          <input type="checkbox" id="chk-pack-sanitize" style="margin-top: 2px;" />
+        <label style="display: flex; align-items: flex-start; gap: 10px; padding: 11px 13px; border-radius: 12px; background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.34); cursor: pointer; font-size: 13px; line-height: 1.5;">
+          <input type="checkbox" id="chk-pack-sanitize" style="margin-top: 3px;" />
           <span>
             <strong>同时清除个人登录态与对话历史（隐私脱敏）</strong><br />
             <span class="desc-xs">若打包分享给同事/他人请勾选（清理 Google 登录与对话记录，保留简体中文及免权限白名单）；仅给自己备份清理请勿勾选。</span>
           </span>
         </label>
-        <div style="display: flex; justify-content: flex-end; gap: 8px;">
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
           <button class="btn btn-sm" id="btn-cancel-pack">取消</button>
           <button class="btn btn-accent btn-sm" id="btn-confirm-pack">确认执行彻底清理</button>
         </div>
@@ -707,7 +707,7 @@
         <input class="glass-input" id="inp-custom-name" placeholder="组件名称（英文字母/数字/-/_，如 ripgrep / bun）" />
         <input class="glass-input" id="inp-custom-url" placeholder="官方下载直链（https://.../package.zip）" />
         <input class="glass-input" id="inp-custom-desc" placeholder="简短用途说明（可选）" />
-        <div style="display: flex; justify-content: flex-end; gap: 8px;">
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
           <button class="btn btn-sm" id="btn-cancel-custom">取消</button>
           <button class="btn btn-primary btn-sm" id="btn-submit-custom">保存并下载安装</button>
         </div>
@@ -716,10 +716,10 @@
 
     <!-- 轻量磨砂弹窗 3: 无 Scoop 便携环境自检报告 -->
     <div class="modal-mask" id="modal-doctor">
-      <div class="modal-box" style="max-width: 620px; height: 420px;">
+      <div class="modal-box" style="max-width: 760px; height: 500px;">
         <div class="card-hd" style="margin-bottom: 0;">
           <div class="card-title">🩺 便携开发环境健康自检</div>
-          <button class="btn btn-xs" id="btn-close-doctor">关闭</button>
+          <button class="btn btn-sm" id="btn-close-doctor">关闭</button>
         </div>
         <div class="log-box" id="doctor-log-box">正在加载体检报告...</div>
       </div>
@@ -727,7 +727,7 @@
 
     <!-- 轻量磨砂弹窗 4: AideRun 启动器本体无感自升级进度 -->
     <div class="modal-mask" id="modal-self-update">
-      <div class="modal-box" style="max-width: 430px;">
+      <div class="modal-box" style="max-width: 500px;">
         <div class="card-hd" style="margin-bottom: 0;">
           <div class="card-title">🚀 AideRun 启动器无感热替换升级</div>
           <span class="card-badge badge-ok" id="self-upd-pct">0%</span>
@@ -738,7 +738,7 @@
         <div class="desc-xs" id="self-upd-text" style="color: var(--text-dark); font-weight: 600;">
           正在从 GitHub Release 拉取最新版 AideRun.exe...
         </div>
-        <div id="self-upd-err-actions" style="display: none; justify-content: flex-end; gap: 8px;">
+        <div id="self-upd-err-actions" style="display: none; justify-content: flex-end; gap: 10px;">
           <button class="btn btn-sm" id="btn-self-upd-close">关闭</button>
           <button class="btn btn-primary btn-sm" id="btn-self-upd-retry">重试升级</button>
         </div>
@@ -753,9 +753,9 @@
       </div>
       <div class="status-right-wrap">
         <button class="btn-self-update-pill" id="btn-self-update-pill" title="检测到 GitHub 新版本，点击立即执行无感影子热替换并自动重启"></button>
-        <div style="font-size: 11px; font-weight: 600; color: var(--text-muted); white-space: nowrap;" id="status-right">AideRun v1.3.1 · 右键托盘多开</div>
+        <div style="font-size: 12.5px; font-weight: 600; color: var(--text-muted); white-space: nowrap;" id="status-right">AideRun v1.3.2 · 右键托盘多开</div>
         <button class="icon-link-btn" id="btn-open-github" title="访问 GitHub 开源仓库 (ZhangSir9901/AideRun)" aria-label="访问 GitHub 开源仓库">
-          <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
             <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
           </svg>
         </button>
@@ -858,10 +858,6 @@
   document.getElementById('btn-shortcut').onclick = () => post('create_shortcut');
   document.getElementById('btn-pick-project').onclick = () => post('pick_and_launch_project');
 
-  document.getElementById('chk-auto-clean').onchange = (e) => {
-    post('toggle_setting', { auto_clean_on_exit: e.target.checked });
-  };
-
   document.getElementById('btn-launch-instance').onclick = () => {
     const name = document.getElementById('inp-instance-name').value.trim();
     if (!name) {
@@ -895,7 +891,7 @@
     post('run_clean_mode', { mode: 'pack', include_sanitize: includeSanitize });
   };
 
-  // Tab 3 Win 检测升级（默认禁用主按钮，仅在线新版或选定本地包后激活）
+  // Tab 3 检测与升级（默认禁用主按钮，仅在线新版或选定本地包后激活）
   document.getElementById('btn-upgrade-online').onclick = () => {
     if (!selectedLocalInstaller && !remoteHasUpdate) return;
     document.getElementById('btn-upgrade-online').disabled = true;
@@ -904,7 +900,7 @@
   document.getElementById('btn-upgrade-local').onclick = () => post('pick_local_installer');
   document.getElementById('btn-upgrade-rollback').onclick = () => post('rollback_upgrade');
 
-  // Tab 4 组件管理
+  // Tab 4 全组件管理
   document.getElementById('btn-refresh-components').onclick = () => {
     sessionToolsRemoteTriggered = true;
     post('refresh_components', { fetch_remote: true });
@@ -1030,7 +1026,7 @@
       nameDiv.textContent = c.display_name;
       const descDiv = document.createElement('div');
       descDiv.className = 'desc-xs';
-      descDiv.style.fontSize = '10.5px';
+      descDiv.style.fontSize = '12px';
       descDiv.textContent = c.summary;
       tdName.appendChild(nameDiv);
       tdName.appendChild(descDiv);
@@ -1119,7 +1115,6 @@
       ? `${s.active_procs.length} 个运行中 (${s.active_procs.slice(0,2).map(p => p.name).join(', ')})`
       : '0 个（空闲安全）';
 
-    document.getElementById('chk-auto-clean').checked = !!s.auto_clean_on_exit;
     document.getElementById('chk-smart-clean').checked = !!s.smart_clean;
 
     // 渲染项目列表

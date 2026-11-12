@@ -1,7 +1,7 @@
 # AideRun - Antigravity IDE 便携版一体化启动器、环境自部署与升级管理工程清单
 [package]
 name = "aide-run"
-version = "1.3.1"
+version = "1.3.2"
 edition = "2021"
 description = "Antigravity IDE 便携版启动器：玻璃拟态面板、托盘多开、一键部署、智能清理与 Win 版检测升级"
 

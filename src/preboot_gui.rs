@@ -1,4 +1,4 @@
-// AideRun - 启动前网络代理自检与便携环境一键部署独立子窗口控制器
+// AideRun - 启动前网络代理自检与便携环境一键部署独立子窗口控制器（与主界面统一 1120x700）
 
 use std::sync::atomic::{AtomicBool, Ordering as AtomicOrdering};
 use std::sync::Arc;
@@ -6,7 +6,7 @@ use std::time::Duration;
 
 use anyhow::{Context, Result};
 use serde_json::{json, Value};
-use tao::dpi::{LogicalSize, PhysicalPosition};
+use tao::dpi::LogicalSize;
 use tao::event_loop::{EventLoopProxy, EventLoopWindowTarget};
 use tao::platform::windows::WindowBuilderExtWindows;
 use tao::window::{Icon as WindowIcon, Window, WindowBuilder};
@@ -14,12 +14,17 @@ use wry::{WebContext, WebView, WebViewBuilder};
 
 use crate::bootstrap::deploy_portable_ide_from_official;
 use crate::config::LauncherConfig;
-use crate::gui::{emit_event_json, make_brand_logo_data_uri, AppEvent};
+use crate::gui::{
+    center_window_on_monitor, emit_event_json, make_brand_logo_data_uri, AppEvent,
+    APP_WINDOW_HEIGHT, APP_WINDOW_WIDTH,
+};
 use crate::paths::PortablePaths;
 use crate::proxy::{
-    auto_detect_google_proxy, parse_proxy_string, probe_google_access, read_windows_system_proxy,
-    GoogleProbeReport, ProxyEndpoint,
+    auto_detect_google_proxy, check_proxy_reachable_timeout, parse_proxy_candidates,
+    parse_proxy_string, probe_google_access, read_windows_system_proxy, GoogleProbeReport,
+    ProxyEndpoint,
 };
+use crate::self_update::open_github_repository;
 
 pub const PROXY_WINDOW_TITLE: &str = "AideRun - 网络代理配置";
 pub const DEPLOY_WINDOW_TITLE: &str = "AideRun - Antigravity IDE 便携部署";
@@ -54,7 +59,7 @@ pub struct PrebootSession {
 }
 
 impl PrebootSession {
-    /// 构建「Google 代理检测与配置」子窗口（480x410）
+    /// 构建「Google 代理检测与配置」子窗口（与主界面统一 1120x700）
     pub fn open_proxy(
         el_target: &EventLoopWindowTarget<AppEvent>,
         web_ctx: &mut WebContext,
@@ -95,7 +100,7 @@ impl PrebootSession {
         Self::build_stage(
             PrebootStage::Proxy,
             PROXY_WINDOW_TITLE,
-            (480.0, 410.0),
+            (APP_WINDOW_WIDTH, APP_WINDOW_HEIGHT),
             &init_payload,
             el_target,
             web_ctx,
@@ -107,7 +112,7 @@ impl PrebootSession {
         )
     }
 
-    /// 构建「便携 Antigravity IDE 环境确认与一键下载部署」子窗口（500x360）
+    /// 构建「便携 Antigravity IDE 环境确认与一键下载部署」子窗口（与主界面统一 1120x700）
     pub fn open_deploy(
         el_target: &EventLoopWindowTarget<AppEvent>,
         web_ctx: &mut WebContext,
@@ -125,7 +130,7 @@ impl PrebootSession {
         Self::build_stage(
             PrebootStage::Deploy,
             DEPLOY_WINDOW_TITLE,
-            (500.0, 360.0),
+            (APP_WINDOW_WIDTH, APP_WINDOW_HEIGHT),
             &init_payload,
             el_target,
             web_ctx,
@@ -208,6 +213,10 @@ impl PrebootSession {
                 let _ = self.window.drag_window();
                 PrebootIpcAction::Continue
             }
+            "open_github_repo" => {
+                let _ = open_github_repository();
+                PrebootIpcAction::Continue
+            }
             "quit_app" => {
                 if self.is_deploying() {
                     PrebootIpcAction::Continue
@@ -250,45 +259,74 @@ impl PrebootSession {
 
         std::thread::spawn(move || {
             let res = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                let Some(ep) = parse_proxy_string(&raw) else {
+                let candidates = parse_proxy_candidates(&raw);
+                if candidates.is_empty() {
                     emit_event_json(
                         &el_proxy,
                         json!({
                             "kind": "proxy_result",
                             "ok": false,
-                            "message": "代理地址格式无效，请输入如 http://127.0.0.1:7890 或 socks5://127.0.0.1:10808",
+                            "message": "无法识别代理信息。支持 http://ip:port、socks5://user:pass@ip:port、ip:port:用户名:密码 或复制完整服务器配置文本。",
                         }),
                     );
                     return;
-                };
+                }
 
-                match probe_google_access(Some(&ep)) {
-                    Ok(()) => {
-                        emit_event_json(
-                            &el_proxy,
-                            json!({
-                                "kind": "proxy_result",
-                                "ok": true,
-                                "message": format!("✓ 通过 {} 成功连通 Google，正在进入下一步...", ep.all_proxy_url()),
-                            }),
-                        );
-                        std::thread::sleep(Duration::from_millis(300));
-                        let _ = el_proxy.send_event(AppEvent::PrebootProxyPassed {
-                            endpoint: Some(ep),
-                            save_manual: true,
-                        });
-                    }
-                    Err(err) => {
-                        emit_event_json(
-                            &el_proxy,
-                            json!({
-                                "kind": "proxy_result",
-                                "ok": false,
-                                "message": format!("Google 连通验证失败：{err}"),
-                            }),
-                        );
+                // 若 TCP 端口本身均无法建立连接，直接快速提示，避免无效多协议回退等待
+                if !check_proxy_reachable_timeout(&candidates[0], Duration::from_millis(900)) {
+                    emit_event_json(
+                        &el_proxy,
+                        json!({
+                            "kind": "proxy_result",
+                            "ok": false,
+                            "message": format!("无法连接代理 {}:{}（未开启或网络不可达）", candidates[0].host, candidates[0].port),
+                        }),
+                    );
+                    return;
+                }
+
+                let mut last_err = String::new();
+                for ep in &candidates {
+                    match probe_google_access(Some(ep)) {
+                        Ok(()) => {
+                            emit_event_json(
+                                &el_proxy,
+                                json!({
+                                    "kind": "proxy_result",
+                                    "ok": true,
+                                    "resolved_proxy": ep.all_proxy_url(),
+                                    "message": format!(
+                                        "✓ 已智能识别 {} ({}) 并成功连通 Google，正在进入下一步...",
+                                        ep.normalized_scheme().to_uppercase(),
+                                        ep.masked_url()
+                                    ),
+                                }),
+                            );
+                            std::thread::sleep(Duration::from_millis(350));
+                            let _ = el_proxy.send_event(AppEvent::PrebootProxyPassed {
+                                endpoint: Some(ep.clone()),
+                                save_manual: true,
+                            });
+                            return;
+                        }
+                        Err(err) => {
+                            last_err = format!(
+                                "{} ({})：{err}",
+                                ep.normalized_scheme().to_uppercase(),
+                                ep.masked_url()
+                            );
+                        }
                     }
                 }
+
+                emit_event_json(
+                    &el_proxy,
+                    json!({
+                        "kind": "proxy_result",
+                        "ok": false,
+                        "message": format!("Google 连通验证失败 — {last_err}"),
+                    }),
+                );
             }));
 
             busy_flag.store(false, AtomicOrdering::SeqCst);
@@ -322,31 +360,57 @@ impl PrebootSession {
             let res = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                 let report = auto_detect_google_proxy(&paths, &cfg);
                 if report.reachable {
-                    let via = if let Some(ep) = &report.endpoint {
-                        format!("{} ({})", report.source_label, ep.all_proxy_url())
+                    let detected_url = report.endpoint.as_ref().map(|ep| ep.all_proxy_url());
+                    let msg = if let Some(ep) = &report.endpoint {
+                        format!(
+                            "✓ 自动检测到可用代理 {}（{}），已自动填入，正在进入下一步...",
+                            ep.masked_url(),
+                            report.source_label
+                        )
                     } else {
-                        report.source_label.clone()
+                        format!(
+                            "✓ 检测到当前系统网络可直接连通 Google（{}），正在进入下一步...",
+                            report.source_label
+                        )
                     };
                     emit_event_json(
                         &el_proxy,
                         json!({
                             "kind": "proxy_result",
                             "ok": true,
-                            "message": format!("✓ 自动检测通过：{via}，正在进入下一步..."),
+                            "detected_proxy": detected_url,
+                            "is_direct": report.endpoint.is_none(),
+                            "message": msg,
                         }),
                     );
-                    std::thread::sleep(Duration::from_millis(300));
+                    std::thread::sleep(Duration::from_millis(450));
                     let _ = el_proxy.send_event(AppEvent::PrebootProxyPassed {
                         endpoint: report.endpoint,
                         save_manual: false,
                     });
                 } else {
+                    let suggested = read_windows_system_proxy()
+                        .or_else(|| report.open_local_ports.first().map(|hit| hit.endpoint.clone()))
+                        .map(|ep| ep.all_proxy_url());
+                    let msg = if suggested.is_some() {
+                        format!(
+                            "已自动填入探测到的本机代理候选，但暂未连通 Google（请检查节点或粘贴外部代理）：{}",
+                            report.failure_reason
+                        )
+                    } else {
+                        format!(
+                            "未检测到可用本地代理且直连失败（{}），请在上方粘贴外部代理信息",
+                            report.failure_reason
+                        )
+                    };
                     emit_event_json(
                         &el_proxy,
                         json!({
                             "kind": "proxy_result",
                             "ok": false,
-                            "message": format!("自动检测仍无法访问 Google：{}", report.failure_reason),
+                            "suggested_proxy": suggested,
+                            "probe_detail": report.failure_reason,
+                            "message": msg,
                         }),
                     );
                 }
@@ -359,7 +423,7 @@ impl PrebootSession {
                     json!({
                         "kind": "proxy_result",
                         "ok": false,
-                        "message": "自动重新检测遇到内部异常，请手动填写代理后测试。",
+                        "message": "自动重新检测遇到内部异常，请粘贴代理地址后测试。",
                     }),
                 );
             }
@@ -460,17 +524,24 @@ fn render_preboot_html(init_payload: &Value) -> String {
         .replace("{{PREBOOT_INIT_JSON}}", &safe_json)
 }
 
-fn center_window_on_monitor(window: &Window) {
-    let Some(mon) = window
-        .current_monitor()
-        .or_else(|| window.primary_monitor())
-    else {
-        return;
-    };
-    let mon_pos = mon.position();
-    let mon_size = mon.size();
-    let win_size = window.outer_size();
-    let x = mon_pos.x + (mon_size.width as i32 - win_size.width as i32) / 2;
-    let y = mon_pos.y + (mon_size.height as i32 - win_size.height as i32) / 2;
-    window.set_outer_position(PhysicalPosition::new(x, y));
+#[cfg(test)]
+mod tests {
+    use super::PREBOOT_HTML_TEMPLATE;
+
+    #[test]
+    fn preboot_css_uses_rgba_not_wpf_argb_hex_and_preserves_footer_buttons() {
+        for bad_hex in ["#0DFFFFFF", "#35FFFFFF", "#18FFFFFF", "#40FFFFFF"] {
+            assert!(
+                !PREBOOT_HTML_TEMPLATE.contains(bad_hex),
+                "WebView CSS 中不得出现 #AARRGGBB 格式色值 {bad_hex}（Chromium 会误判为青色 #RRGGBBAA）"
+            );
+        }
+        assert!(PREBOOT_HTML_TEMPLATE.contains("测试连接并继续"));
+        assert!(PREBOOT_HTML_TEMPLATE.contains("是，立即下载部署"));
+        assert!(PREBOOT_HTML_TEMPLATE.contains("proxyUrlInput"));
+        assert!(!PREBOOT_HTML_TEMPLATE.contains("proxyScheme"));
+        assert!(PREBOOT_HTML_TEMPLATE.contains("btnGithubTop"));
+        assert!(PREBOOT_HTML_TEMPLATE.contains("btnGithubCorner"));
+        assert!(PREBOOT_HTML_TEMPLATE.contains("open_github_repo"));
+    }
 }

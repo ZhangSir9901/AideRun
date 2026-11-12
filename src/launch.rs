@@ -13,6 +13,7 @@ use crate::console::CREATE_NO_WINDOW;
 use crate::env::{apply_env_to_command, build_isolated_env};
 use crate::paths::PortablePaths;
 use crate::proxy::resolve_and_sync_proxy;
+use crate::relocate::auto_relocate_portable_env;
 use crate::scoop_heal::auto_heal_scoop_if_needed;
 
 const CREATE_NEW_CONSOLE: u32 = 0x0000_0010;
@@ -128,7 +129,8 @@ fn spawn_ide_profile(
         );
     }
 
-    // 2. Scoop 跨盘符移动自动自愈
+    // 2. 跨盘符无感自愈（检测盘符/路径漂移并自动修复扩展、工作区、Git 凭据与 SQLite 索引）
+    let _ = auto_relocate_portable_env(paths, &cfg.toolchain, false);
     if cfg.toolchain.auto_heal_scoop {
         let _ = auto_heal_scoop_if_needed(paths, false);
     }
@@ -267,6 +269,7 @@ fn prepare_shell_command(
     use_powershell: bool,
 ) -> Result<Command> {
     ensure_portable_ready(paths, cfg, false)?;
+    let _ = auto_relocate_portable_env(paths, &cfg.toolchain, false);
     if cfg.toolchain.auto_heal_scoop {
         let _ = auto_heal_scoop_if_needed(paths, false);
     }

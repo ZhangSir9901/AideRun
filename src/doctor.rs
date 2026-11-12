@@ -9,6 +9,7 @@ use crate::config::LauncherConfig;
 use crate::paths::PortablePaths;
 use crate::process::find_active_processes_in_root;
 use crate::proxy::{check_proxy_reachable, read_config_json_proxy, read_windows_system_proxy};
+use crate::relocate::detect_pending_relocation;
 use crate::scoop_heal::is_ntfs_volume;
 use crate::upgrade::{is_inno_setup_installer, read_local_versions};
 
@@ -41,6 +42,19 @@ pub fn collect_doctor_report(paths: &PortablePaths, cfg: &LauncherConfig) -> Str
             "[正常] data / user-data / extensions / profile / projects / tools 完整"
         }
     );
+    if let Some(pending) = detect_pending_relocation(paths) {
+        let source_note = if pending.from_marker { "" } else { "·配置反推" };
+        let _ = writeln!(
+            out,
+            "   - 跨盘符迁移  : [待自愈{source_note}] 检测到旧目录 {} -> 当前 {}（启动 IDE/终端或运行 `AideRun.exe relocate` 将自动修复）",
+            pending.recorded_root, pending.current_root
+        );
+    } else {
+        let _ = writeln!(
+            out,
+            "   - 跨盘符迁移  : [一致] 当前根目录锚点正常，支持 U 盘换电脑盘符变化后无感自动重定位"
+        );
+    }
 
     let _ = writeln!(out, "\n2. Antigravity IDE 内核与代理状态:");
     if !paths.ide_exe.is_file() {

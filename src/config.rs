@@ -69,6 +69,7 @@ impl Default for ProxyPolicyConfig {
 #[serde(default)]
 pub struct ToolchainConfig {
     pub auto_heal_scoop: bool,
+    pub auto_heal_relocate: bool,
     pub prefer_native_portable: bool,
     pub custom_components: Vec<CustomComponent>,
 }
@@ -77,6 +78,7 @@ impl Default for ToolchainConfig {
     fn default() -> Self {
         Self {
             auto_heal_scoop: false,
+            auto_heal_relocate: true,
             prefer_native_portable: true,
             custom_components: Vec::new(),
         }

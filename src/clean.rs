@@ -234,6 +234,12 @@ pub fn scan_clean_targets_with_opts(
             false,
             CleanCategory::PackOnly,
         ));
+        specs.push((
+            "跨盘符迁移回滚快照 (cache/_relocate_backup)".into(),
+            paths.cache_dir.join("_relocate_backup"),
+            false,
+            CleanCategory::PackOnly,
+        ));
     }
 
     let mut targets = Vec::new();

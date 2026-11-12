@@ -15,6 +15,7 @@ mod paths;
 mod preboot_gui;
 mod process;
 mod proxy;
+mod relocate;
 mod sanitize;
 mod scoop_heal;
 mod self_update;
@@ -39,6 +40,7 @@ use crate::launch::{
 use crate::menu::run_interactive_menu;
 use crate::paths::PortablePaths;
 use crate::proxy::resolve_and_sync_proxy;
+use crate::relocate::auto_relocate_portable_env;
 use crate::sanitize::run_sanitize;
 use crate::toolbox::{handle_tools_command, install_portable_tool};
 use crate::upgrade::{handle_check_update, handle_upgrade_command};
@@ -56,6 +58,7 @@ const RESERVED_SUBCOMMANDS: &[&str] = &[
     "check-update",
     "upgrade",
     "doctor",
+    "relocate",
     "init",
     "bootstrap",
     "shortcut",
@@ -275,6 +278,28 @@ fn run_cli_subcommand(args: &[String]) -> Result<()> {
         "check-update" => handle_check_update(&paths, &cfg),
         "upgrade" => handle_upgrade_command(rest, &paths, &cfg),
         "doctor" => run_doctor(&paths, &cfg),
+        "relocate" => {
+            let force = rest.iter().any(|a| a == "--force" || a == "-f");
+            let report = auto_relocate_portable_env(&paths, &cfg.toolchain, force)?;
+            if report.skipped_due_to_lock {
+                println!("[!] 检测到目录内存在运行中的 IDE 进程，请关闭后重试 relocate。");
+            } else if report.migrated {
+                println!(
+                    "[√] 跨盘符迁移自愈完成：{} -> {}（更新文件 {} 个，替换路径 {} 处，SQLite 记录 {} 条）",
+                    report.old_root.as_deref().unwrap_or("历史目录"),
+                    report.new_root,
+                    report.files_rewritten,
+                    report.replacements_applied,
+                    report.sqlite_rows_updated
+                );
+            } else {
+                println!("[√] 当前便携根目录（{}）与配置索引一致，无需迁移。", report.new_root);
+            }
+            for w in &report.warnings {
+                println!("  [提示] {w}");
+            }
+            Ok(())
+        }
         "shortcut" => {
             create_desktop_shortcut(&paths)?;
             println!("[√] 已在当前用户桌面创建 Antigravity便携版.lnk。");
@@ -305,7 +330,7 @@ fn print_help() {
     println!("AideRun {} - Antigravity IDE 便携版一体化启动器与维护引擎", env!("CARGO_PKG_VERSION"));
     println!();
     println!("默认行为：");
-    println!("  无参数双击 (`panel` / `gui`)   打开 860x560 水晶玻璃拟态启动面板（托盘常驻、多开与维护）");
+    println!("  无参数双击 (`panel` / `gui`)   打开 1120x700 水晶玻璃拟态启动面板（托盘常驻、多开与维护）");
     println!("  `--silent` 或拖放文件夹       跳过面板静默注入便携环境并直接拉起 Antigravity IDE.exe");
     println!("  `--instance <名称> [项目]`      使用独立隔离数据分身 (data/instances/<名称>) 多开窗口");
     println!();
@@ -321,6 +346,7 @@ fn print_help() {
     println!("                               零注册表解包并原子升级 Antigravity IDE 内核");
     println!("  tools <list|install|upgrade|add-custom|remove>    零软链接原生便携组件管理平台");
     println!("  doctor                       一键便携环境健康体检");
+    println!("  relocate [--force]           检测 U 盘盘符变化并自动重定位扩展、工作区与配置路径");
     println!("  shortcut                     按需在桌面创建快捷方式");
     println!("  config [init]                查看或生成 data/launcher.toml 配置模板");
 }
