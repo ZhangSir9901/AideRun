@@ -1,6 +1,18 @@
 <!-- AideRun - 便携版一体化启动器更新日志（简体中文） -->
 # 更新日志 (AideRun)
 
+## [1.3.1] - 2026-11-12
+
+### 新增与改进
+- **AideRun 启动器自身无感检测与影子热升级**：
+  - 新增 [`self_update`](src/self_update.rs) 模块与 [`Release/update.json`](Release/update.json) 版本清单，启动面板后在后台静默检查 GitHub 远端版本（支持直连代理及 `ghproxy.net` / `raw.kkgithub.com` 多源镜像回退），并在“检测与升级”页增加手动检测与升级横条。
+  - 检测到新版本后，底部状态栏右侧自动亮起呼吸闪烁提示按钮（`🚀 发现新版 · 点击无感升级`），下载新版至 `.new` 并校验 Windows `MZ` PE 文件头合法性后执行 `.old` 影子热替换（失败自动回滚）。
+  - 针对带托盘单实例保护的特性新增 `--wait-pid` 重启衔接参数：新版等待旧进程彻底释放窗口句柄并清理 `.old` 后无缝启动呈现，杜绝单实例检测误拦截。
+- **右下角 GitHub 仓库直达入口**：
+  - 控制台状态栏右下角新增 GitHub Octocat 图标按钮，点击直接调用系统浏览器打开 [`ZhangSir9901/AideRun`](https://github.com/ZhangSir9901/AideRun)。
+- **项目文档升级**：
+  - 参考同系列项目结构全面改写 [`README.md`](README.md)，补充徽章展示、功能全景与发行维护说明。
+
 ## [1.3.0] - 2026-11-12
 
 ### 新增与改进

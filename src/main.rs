@@ -17,6 +17,7 @@ mod process;
 mod proxy;
 mod sanitize;
 mod scoop_heal;
+mod self_update;
 mod toolbox;
 mod upgrade;
 
@@ -105,12 +106,36 @@ fn install_panic_hook() {
     }));
 }
 
+fn extract_wait_pid_arg(raw_args: &[String]) -> (Option<u32>, Vec<String>) {
+    let mut wait_pid = None;
+    let mut remaining = Vec::with_capacity(raw_args.len());
+    let mut idx = 0;
+    while idx < raw_args.len() {
+        if raw_args[idx] == "--wait-pid" {
+            if let Some(next) = raw_args.get(idx + 1) {
+                wait_pid = next.trim().parse::<u32>().ok();
+                idx += 2;
+                continue;
+            }
+        }
+        remaining.push(raw_args[idx].clone());
+        idx += 1;
+    }
+    (wait_pid, remaining)
+}
+
 fn main() {
     install_panic_hook();
     let raw_args: Vec<String> = std::env::args().skip(1).collect();
+    let (wait_pid, filtered_args) = extract_wait_pid_arg(&raw_args);
+    if let Some(old_pid) = wait_pid {
+        self_update::wait_for_old_pid_and_cleanup(old_pid);
+    } else {
+        self_update::cleanup_old_self_binaries();
+    }
 
     // 1. 默认双击无参数，或显式传入 `panel` / `gui` 时，弹出 860x560 水晶玻璃拟态控制面板（选项 A）
-    if raw_args.is_empty() || matches!(raw_args[0].as_str(), "panel" | "gui") {
+    if filtered_args.is_empty() || matches!(filtered_args[0].as_str(), "panel" | "gui") {
         let attached = init_console(
             ConsoleModeKind::AttachIfPresent,
             "AideRun - Antigravity IDE 便携控制台",
@@ -126,16 +151,16 @@ fn main() {
     }
 
     // 2. 支持 `--silent` / `-s`、`--instance <name>` 或直接拖放项目文件夹静默直启 IDE
-    let is_cli_subcommand = RESERVED_SUBCOMMANDS.contains(&raw_args[0].as_str());
+    let is_cli_subcommand = RESERVED_SUBCOMMANDS.contains(&filtered_args[0].as_str());
     if !is_cli_subcommand {
-        if let Err(err) = run_silent_launch(&raw_args) {
+        if let Err(err) = run_silent_launch(&filtered_args) {
             show_error_dialog("AideRun 启动失败", &format!("{err:#}"));
             std::process::exit(1);
         }
         return;
     }
 
-    let first = raw_args[0].as_str();
+    let first = filtered_args[0].as_str();
     let interactive_subcommand = matches!(first, "menu" | "shell" | "cmd" | "powershell" | "ps" | "init" | "bootstrap");
     let allocated_window = init_console(
         if interactive_subcommand {
@@ -146,7 +171,7 @@ fn main() {
         "AideRun - Antigravity IDE 便携控制中心",
     );
 
-    if let Err(err) = run_cli_subcommand(&raw_args) {
+    if let Err(err) = run_cli_subcommand(&filtered_args) {
         eprintln!("[错误] {err:#}");
         if allocated_window {
             pause_enter();
@@ -298,5 +323,27 @@ fn print_help() {
     println!("  doctor                       一键便携环境健康体检");
     println!("  shortcut                     按需在桌面创建快捷方式");
     println!("  config [init]                查看或生成 data/launcher.toml 配置模板");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::extract_wait_pid_arg;
+
+    #[test]
+    fn extracts_wait_pid_and_preserves_remaining_args() {
+        let args = vec!["--wait-pid".to_string(), "4242".to_string()];
+        let (pid, rem) = extract_wait_pid_arg(&args);
+        assert_eq!(pid, Some(4242));
+        assert!(rem.is_empty());
+
+        let args2 = vec![
+            "--wait-pid".to_string(),
+            "99".to_string(),
+            "--silent".to_string(),
+        ];
+        let (pid2, rem2) = extract_wait_pid_arg(&args2);
+        assert_eq!(pid2, Some(99));
+        assert_eq!(rem2, vec!["--silent".to_string()]);
+    }
 }
 

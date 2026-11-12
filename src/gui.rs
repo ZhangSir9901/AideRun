@@ -47,6 +47,10 @@ use crate::proxy::{
 };
 use crate::sanitize::run_sanitize;
 use crate::scoop_heal::is_ntfs_volume;
+use crate::self_update::{
+    check_self_update, download_and_swap_self, open_github_repository,
+    spawn_new_self_after_update, SelfUpdateCheckResult,
+};
 use crate::toolbox::{
     add_custom_component, collect_component_statuses, install_portable_tool, remove_portable_tool,
     ComponentStatusItem,
@@ -74,6 +78,7 @@ pub(crate) enum AppEvent {
         save_manual: bool,
     },
     PrebootDeployCompleted,
+    SelfUpdateRestart,
 }
 
 #[derive(Debug, Deserialize)]
@@ -135,12 +140,15 @@ struct SharedApp {
     cfg: Arc<Mutex<LauncherConfig>>,
     proxy: EventLoopProxy<AppEvent>,
     update_cache: Arc<Mutex<Option<CachedUpdateCheck>>>,
+    self_update_cache: Arc<Mutex<Option<SelfUpdateCheckResult>>>,
     remote_tool_vers: Arc<Mutex<HashMap<String, String>>>,
     busy_clean: Arc<AtomicBool>,
     busy_upgrade: Arc<AtomicBool>,
     busy_tools: Arc<AtomicBool>,
     busy_update: Arc<AtomicBool>,
+    busy_self_update: Arc<AtomicBool>,
     smart_boot_checked: Arc<AtomicBool>,
+    self_update_checked: Arc<AtomicBool>,
 }
 
 struct BusyGuard(Arc<AtomicBool>);
@@ -332,12 +340,15 @@ fn build_main_runtime(
         cfg: Arc::new(Mutex::new(cfg)),
         proxy: el_proxy.clone(),
         update_cache: Arc::new(Mutex::new(None)),
+        self_update_cache: Arc::new(Mutex::new(None)),
         remote_tool_vers: Arc::new(Mutex::new(HashMap::new())),
         busy_clean: Arc::new(AtomicBool::new(false)),
         busy_upgrade: Arc::new(AtomicBool::new(false)),
         busy_tools: Arc::new(AtomicBool::new(false)),
         busy_update: Arc::new(AtomicBool::new(false)),
+        busy_self_update: Arc::new(AtomicBool::new(false)),
         smart_boot_checked: Arc::new(AtomicBool::new(false)),
+        self_update_checked: Arc::new(AtomicBool::new(false)),
     };
 
     // 启动后台轻量守护线程：监听 IDE 进程退出后执行「程序智能清理」
@@ -652,6 +663,21 @@ pub fn run_panel() -> Result<()> {
                         }
                     }
                 }
+                AppEvent::SelfUpdateRestart => {
+                    if let Some(ActiveUi::Main(mut main_rt)) = active_ui.take() {
+                        main_rt.shutdown_flag.store(true, AtomicOrdering::SeqCst);
+                        main_rt.window.set_visible(false);
+                        main_rt.tray_holder.take();
+                        drop(main_rt);
+                    }
+                    if let Err(err) = spawn_new_self_after_update() {
+                        show_error_dialog(
+                            "AideRun 重启失败",
+                            &format!("新版文件已替换成功，但自动重启失败：{err:#}"),
+                        );
+                    }
+                    *control_flow = ControlFlow::Exit;
+                }
             },
             _ => {}
         }
@@ -738,6 +764,21 @@ fn handle_worker_action(app: &SharedApp, action: &str, payload: Value) {
                 }
             }
             push_state(app);
+
+            // 启动主面板后在后台静默检查一次 AideRun 本体新版本（发现新版触发底栏呼吸提醒）
+            if !app.self_update_checked.swap(true, AtomicOrdering::SeqCst) {
+                let app_bg = app.clone();
+                std::thread::spawn(move || {
+                    run_self_update_check(&app_bg, false);
+                });
+            } else if let Some(cached) = app
+                .self_update_cache
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .clone()
+            {
+                emit_self_update_result(&app.proxy, &cached, true);
+            }
         }
         "launch_main" => {
             emit_status(&app.proxy, "busy", "正在准备便携环境并启动 Antigravity IDE...", None);
@@ -1193,7 +1234,165 @@ fn handle_worker_action(app: &SharedApp, action: &str, payload: Value) {
             let report = collect_doctor_report(&app.paths, &cfg);
             emit_event_json(&app.proxy, json!({ "kind": "doctor_report", "report": report }));
         }
+        "open_github_repo" => {
+            if let Err(err) = open_github_repository() {
+                emit_status(&app.proxy, "err", &format!("打开 GitHub 页面失败: {err:#}"), None);
+            }
+        }
+        "check_self_update" => {
+            let force = payload.get("force").and_then(|v| v.as_bool()).unwrap_or(false);
+            if !force {
+                if let Some(cached) = app
+                    .self_update_cache
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .clone()
+                {
+                    emit_self_update_result(&app.proxy, &cached, false);
+                    return;
+                }
+            }
+            run_self_update_check(app, true);
+        }
+        "run_self_update" => {
+            let Some(_guard) = BusyGuard::try_acquire(&app.busy_self_update) else {
+                emit_status(&app.proxy, "warn", "AideRun 自身升级正在执行中...", None);
+                return;
+            };
+            let explicit_url = payload
+                .get("url")
+                .and_then(|v| v.as_str())
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .map(str::to_string);
+            let cached_url = app
+                .self_update_cache
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .as_ref()
+                .map(|r| r.download_url.clone());
+
+            let target_url = match explicit_url.or(cached_url) {
+                Some(u) => u,
+                None => match check_self_update() {
+                    Ok(res) if res.has_update => res.download_url,
+                    Ok(res) => {
+                        emit_event_json(
+                            &app.proxy,
+                            json!({
+                                "kind": "self_update_failed",
+                                "error": format!("当前已是最新版本 v{}", res.local_version)
+                            }),
+                        );
+                        return;
+                    }
+                    Err(err) => {
+                        emit_event_json(
+                            &app.proxy,
+                            json!({
+                                "kind": "self_update_failed",
+                                "error": format!("{err:#}")
+                            }),
+                        );
+                        return;
+                    }
+                },
+            };
+
+            let proxy_ref = app.proxy.clone();
+            match download_and_swap_self(&target_url, |pct, msg| {
+                emit_event_json(
+                    &proxy_ref,
+                    json!({
+                        "kind": "self_update_progress",
+                        "percent": pct,
+                        "text": msg
+                    }),
+                );
+            }) {
+                Ok(()) => {
+                    std::thread::sleep(Duration::from_millis(320));
+                    let _ = app.proxy.send_event(AppEvent::SelfUpdateRestart);
+                }
+                Err(err) => {
+                    let msg = format!("{err:#}");
+                    emit_status(&app.proxy, "err", &format!("AideRun 自升级失败: {msg}"), None);
+                    emit_event_json(
+                        &app.proxy,
+                        json!({
+                            "kind": "self_update_failed",
+                            "error": msg
+                        }),
+                    );
+                }
+            }
+        }
         _ => {}
+    }
+}
+
+fn emit_self_update_result(
+    proxy: &EventLoopProxy<AppEvent>,
+    res: &SelfUpdateCheckResult,
+    silent: bool,
+) {
+    emit_event_json(
+        proxy,
+        json!({
+            "kind": "self_update_result",
+            "ok": true,
+            "silent": silent,
+            "data": res
+        }),
+    );
+}
+
+fn run_self_update_check(app: &SharedApp, manual: bool) {
+    if manual {
+        emit_status(&app.proxy, "busy", "正在检测 AideRun 启动器最新版本...", None);
+    }
+    match check_self_update() {
+        Ok(res) => {
+            *app.self_update_cache
+                .lock()
+                .unwrap_or_else(|e| e.into_inner()) = Some(res.clone());
+            emit_self_update_result(&app.proxy, &res, !manual);
+            if manual {
+                if res.has_update {
+                    emit_status(
+                        &app.proxy,
+                        "warn",
+                        &format!(
+                            "发现 AideRun 新版本 v{}（当前 v{}），可点击无感升级",
+                            res.remote_version, res.local_version
+                        ),
+                        None,
+                    );
+                } else {
+                    emit_status(
+                        &app.proxy,
+                        "ok",
+                        &format!("AideRun 启动器已是最新版 v{}", res.local_version),
+                        None,
+                    );
+                }
+            }
+        }
+        Err(err) => {
+            let err_msg = format!("{err:#}");
+            emit_event_json(
+                &app.proxy,
+                json!({
+                    "kind": "self_update_result",
+                    "ok": false,
+                    "silent": !manual,
+                    "error": err_msg
+                }),
+            );
+            if manual {
+                emit_status(&app.proxy, "err", &format!("检测 AideRun 自更新失败: {err_msg}"), None);
+            }
+        }
     }
 }
 

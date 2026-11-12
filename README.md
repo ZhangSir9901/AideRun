@@ -1,98 +1,136 @@
-<!-- AideRun - Antigravity IDE 便携版一体化启动器与全生命周期管理控制台项目说明文档 -->
+<!-- AideRun - Antigravity IDE 便携版全能启动器项目说明文档 -->
+<div align="center">
 
-# AideRun
+<img src="https://raw.githubusercontent.com/ZhangSir9901/AideRun/main/assets/icon_256.png" width="100" alt="AideRun Logo" onerror="this.src='https://raw.githubusercontent.com/ZhangSir9901/AideRun/main/assets/logo.svg'">
 
-**AideRun** 是一款专为 Windows 平台 **Antigravity IDE** 打造的零污染、全便携桌面端启动器与环境管理控制台，基于 **Rust + tao + wry (WebView2) + tray-icon** 构建，主打**开箱即用、彻底环境隔离、零注册表官网一键部署**与 **Crystal Glassmorphism（水晶玻璃拟态）** 交互体验。
+<h1>AideRun · Antigravity IDE 便携启动器</h1>
 
-> 当前最新版本：**v1.3.0** ｜ 编译成品已归档于 [`Release/AideRun.exe`](Release/AideRun.exe)
+**专为极致便携与高洁癖开发者打造的一体化 Antigravity IDE 零污染桌面启动器与全生命周期管家**
+
+致力于摆脱系统盘路径污染与复杂环境配置，原生提供启动前智能代理检测、官方原版零注册表一键部署、自身无感影子热升级、多开分身隔离以及水晶玻璃拟态控制台体验。
+
+<p align="center">
+  <img src="https://img.shields.io/github/stars/ZhangSir9901/AideRun?style=flat-square&color=3498db&logo=github" alt="stars">
+  <img src="https://img.shields.io/badge/version-v1.3.1-1abc9c?style=flat-square" alt="version">
+  <img src="https://img.shields.io/github/issues/ZhangSir9901/AideRun?style=flat-square&color=f1c40f" alt="issues">
+  <img src="https://img.shields.io/badge/arch-x86__64-lightgrey?style=flat-square" alt="arch">
+  <img src="https://img.shields.io/badge/OS-Win10_11-success?style=flat-square" alt="os">
+  <img src="https://img.shields.io/badge/Built_with-Rust-orange?style=flat-square&logo=rust&logoColor=white" alt="Rust">
+</p>
+
+<h3>
+  <a href="#️-使用说明">快速开始</a> · 
+  <a href="#-核心功能一览">核心特性</a> · 
+  <a href="#-目录结构与源码编译">源码编译</a> · 
+  <a href="#-更新日志">更新日志</a> · 
+  <a href="#-意见反馈与技术支持">技术支持</a>
+</h3>
+
+<br>
+
+</div>
+
+> 💡 **最新版直链下载**：[Release/AideRun.exe](https://raw.githubusercontent.com/ZhangSir9901/AideRun/main/Release/AideRun.exe)（单文件静态编译成品，放入目标目录双击即可自动部署全套便携开发环境）
 
 ---
 
-## 核心特性
+## ✨ 核心功能一览
 
-### 1. 启动前置双引导子窗口（v1.3.0）
-双击启动 `AideRun.exe` 时，程序会先在**不向当前目录写入任何文件/文件夹**的前提下完成两道静默前置检测：
-- **网络代理与 Google 连通性自检（`480 × 410`）**
-  - 自动并发探测常见 Windows 代理软件端口（Clash `7890`/`7897`、v2rayN `10809`/`10808`、Shadowsocks `1080`、NekoBox `2080`、Hiddify 等）、Windows 系统代理、环境变量代理及 TUN 直连状态。
-  - 若可正常访问 Google，静默跳过；若检测不通过，自动弹出代理配置子窗口，支持常用软件端口快捷填入、粘贴完整代理 URL 并实时测试连通性。
-- **便携 IDE 环境检测与官网一键部署（`500 × 360`）**
-  - 若当前目录已包含 Antigravity IDE 环境（或待解包的官方安装包），直接进入主控制台。
-  - 若目录中仅存在启动器本体，弹窗询问：`当前目录没有 Antigravity IDE 环境，是否开始现在部署 Antigravity IDE 便携开发环境？`
-    - 选择 **“是，立即下载部署”**：自动从 `antigravity.google` 获取最新 Windows x64 安装包并在子窗口实时展示下载进度、速率与日志，调用便携 `innounp` 完成**零注册表解包部署**。
-    - 选择 **“否”**：提示 `请把程序放在你需要部署的目录再次运行` 并在当前目录**零残留**安全退出。
+### 🌐 1. 启动前置双引导：代理检测与官网零注册表一键部署
+*   **智能代理自检**：启动 GUI 时无副作用并发探测常见 Windows 代理软件端口（Clash `7890`/`7897`、v2rayN `10809`/`10808`、Shadowsocks `1080`、NekoBox `2080`、Hiddify 等）、系统代理、环境变量与 TUN 直连 Google 连通性；未连通时自动弹出水晶玻璃拟态代理配置子窗口，支持预设快填、URL 粘贴解析与实时测试。
+*   **纯净目录自动部署**：若目录中仅存在 `AideRun.exe`（缺少 IDE 环境），确认后直连官网获取最新 Windows x64 安装包并在子窗口实时展示下载进度与速率，调用便携 `innounp` 完成**零注册表原地解包**；若点击“否”则提示并在当前目录**零残留**安全退出。
 
-### 2. 彻底的跨盘符便携隔离
-所有用户数据、扩展插件、AI 会话档案与开发缓存统一收口到软件根目录下的 `data/` 中，**绝不污染宿主系统 C 盘**，支持整包打包迁移或拷贝至 U 盘随身使用：
-- `data/user-data/` & `data/extensions/`：VS Code / IDE 用户配置与插件目录
-- `data/profile/`：完整隔离的个人用户根目录（注入 `USERPROFILE`、`HOME`、`HOMEDRIVE`、`HOMEPATH`、`APPDATA`、`LOCALAPPDATA`、`CARGO_HOME`、`RUSTUP_HOME`、`DOTNET_CLI_HOME` 等），确保 `.gemini` 助手数据与开发者工具链全部留在便携目录
-- `data/cache/`：统一承接系统临时目录与包管理器缓存（`Temp`、`npm`、`pip`、`uv`、`cargo-target`、`webview2` 等）
-- `projects/` & `tools/portable/`：默认工作空间与绿色工具链容器
+### 🚀 2. 自身无感热升级：GitHub 检测与影子热替换
+*   **静默版本探测**：主面板每次启动自动对比远端 [`Release/update.json`](https://github.com/ZhangSir9901/AideRun/blob/main/Release/update.json)（兼容直连代理与镜像回退），发现新版立即在底部状态栏以醒目的**呼吸提醒按钮**弹出通知，亦可在「检测与升级」页手动触发检测。
+*   **防锁死影子热替换**：下载新版至 `.new` 并校验 Windows PE 文件头合法性，随后原子执行 `.old` 重命名与新版上位替换，自动释放托盘后通过 `--wait-pid` 等待旧进程句柄销毁并秒级重启新版，旧残留自动静默清除。
 
-### 3. 主控制台与全生命周期运维
-- **水晶玻璃拟态 860×560 主控面板**：内置 HSL 360° 呼吸流光引擎（50ms 刷新、0.35° 步长），支持系统托盘常驻、多开独立隔离实例、一键创建桌面快捷方式与便携 PowerShell 终端。
-- **智能安全清理与防误杀**：基于 SQLite 清理、分类磁盘扫描、进程占用保护与退出后自动日常瘦身。
-- **便携工具链管理 & IDE 在线升级**：内置原生绿色组件安装/状态检测及原子替换内核升级、异常回滚机制。
+### 🛡️ 3. 彻底跨盘符隔离：告别 C 盘膨胀
+*   **全路径环境变量接管**：自动注入隔离版 `USERPROFILE`、`HOME`、`HOMEDRIVE`、`HOMEPATH`、`APPDATA`、`LOCALAPPDATA`、`CARGO_HOME`、`RUSTUP_HOME`、`NPM_CONFIG_PREFIX` 等，将 Antigravity 用户数据、插件、`agy` 语言后端、Cargo/Rust/Python/npm 缓存全部收口至同级 `data/` 目录。
+*   **随身携带免配置**：支持整包拷贝跨盘符或换机即插即用，系统 `PATH` 与桌面环境保持绝对纯净。
+
+### ✨ 4. 水晶玻璃拟态面板与托盘多开分身
+*   **工业级美学 UI**：基于 **Rust + tao + wry (WebView2)** 原生渲染 `860 × 560` 无边框透明窗口，搭载 50ms 驱动 HSL 360° 呼吸流光引擎（步长 `0.35°`、S `0.52`、L `0.85`），内置右下角 GitHub 仓库一键直达按钮。
+*   **工作区隔离多开**：一键系统托盘常驻、按项目文件夹独立多开、或通过 `--instance <名称>` 创建完全隔离的数据分身，并内置便携 PowerShell / CMD 终端启动器。
+
+### 🧹 5. 智能清理、脱敏与内核升级护盾
+*   **分级瘦身与进程保护**：智能识别 IDE 锁占用，提供一键日常清理与打包前彻底瘦身（支持保留配置仅清除缓存，或一键 SQLite 隐私脱敏分享给他人）。
+*   **IDE 内核零注册表升级 & 回滚**：一键从官方通道升级 Antigravity IDE 本体，自动保护 `data/`、`projects/`、`tools/` 与 `config.json` 并保留可秒级回滚快照。
 
 ---
 
-## 目录结构
+## 🛠️ 使用说明
+
+1. **零基础全新部署**：下载 [`Release/AideRun.exe`](https://raw.githubusercontent.com/ZhangSir9901/AideRun/main/Release/AideRun.exe) 放入希望安放 Antigravity IDE 的文件夹并双击运行，按引导完成代理验证与“是，立即下载部署”即可自动装好全部环境。
+2. **已有目录直接接管**：将 `AideRun.exe` 放入已解包的便携版 Antigravity IDE 根目录，双击直接秒进 860×560 控制面板。
+3. **静默直启与命令行**：
+   - `AideRun.exe --silent` 或将项目文件夹拖放到图标上：跳过控制面板，注入完整便携环境直启 IDE。
+   - `AideRun.exe doctor` / `clean` / `tools list`：支持完整命令行体检、清理与原生零软链接组件管理。
+
+---
+
+## 💻 目录结构与源码编译
 
 ```text
 AideRun/
-├── .cargo/config.toml        # Cargo 编译配置（启用 +crt-static 与统一 target-dir）
 ├── Release/
-│   └── AideRun.exe           # 最新 Release 静态编译可执行成品（供分发与无感升级）
-├── assets/                   # WebView2 前端模板（panel.html / preboot.html）与图标资源
+│   ├── AideRun.exe           # 最新静态编译成品（供分发与无感自升级）
+│   └── update.json           # 远端自升级版本清单
+├── assets/                   # WebView2 前端模板（panel.html / preboot.html）与图标
 ├── src/
-│   ├── main.rs               # 程序入口、控制台抑制与子命令路由
-│   ├── gui.rs                # 860×560 主控制台、系统托盘与全局事件编排
-│   ├── preboot_gui.rs        # 启动前置代理检测与便携部署双引导子窗口控制器
-│   ├── bootstrap.rs          # 便携骨架部署、环境诊断与官方安装包解包部署引擎
-│   ├── proxy.rs              # 常见代理端口扫描、Google 连通验证与 config.json 同步
-│   ├── net.rs                # 网络请求、静默实时进度下载与压缩包解压
-│   ├── env.rs                # 便携环境变量隔离注入（含 HOMEDRIVE/HOMEPATH）与 PATH 构造
-│   ├── upgrade.rs            # 官方最新版本检查、零注册表解包与原子内核替换升级
-│   ├── toolbox.rs            # 内置便携开发工具链管理
-│   ├── clean.rs / sanitize.rs# 缓存清理扫描与敏感状态脱敏
-│   ├── launch.rs / process.rs# IDE 主窗口/多开实例拉起与进程锁检测
-│   ├── config.rs / paths.rs  # 启动器配置读写与便携路径解析
+│   ├── main.rs               # 入口路由、控制台抑制与 --wait-pid 自升级重启衔接
+│   ├── gui.rs                # 主控制台、系统托盘与全局状态事件调度
+│   ├── preboot_gui.rs        # 启动前代理检测与官网一键部署双引导子窗口
+│   ├── self_update.rs        # AideRun 本体 GitHub 版本探测与影子热替换自升级
+│   ├── bootstrap.rs          # 便携骨架搭建、环境诊断与官方安装包解包引擎
+│   ├── proxy.rs              # 常见代理端口并发扫描、Google 校验与配置同步
+│   ├── env.rs                # 彻底便携环境变量注入（含 HOMEDRIVE / HOMEPATH）
+│   ├── upgrade.rs            # Antigravity IDE 内核检测升级与异常回滚
+│   ├── clean.rs / sanitize.rs# 垃圾缓存统计清理与 SQLite 隐私脱敏
 │   └── ...
-├── build.rs                  # Windows 应用程序清单与图标资源嵌入
-├── Cargo.toml                # Rust 工程配置与依赖声明
-├── Cargo.lock                # 锁定依赖版本
+├── .cargo/config.toml        # Cargo 编译目标重定向与静态 CRT 配置
 └── CHANGELOG.md              # 简体中文版本更新日志
 ```
 
----
-
-## 快速使用
-
-### 直接运行预编译成品
-1. 下载 [`Release/AideRun.exe`](Release/AideRun.exe)，放入任意希望部署 Antigravity IDE 的空目录（或已有 Antigravity IDE 目录）。
-2. 确保本地代理软件已开启（或处于可访问 Google 的网络环境），双击运行 `AideRun.exe`。
-3. 跟随引导完成网络检测与官网自动便携部署后，即可进入主控制面板使用。
-
-### 从源码编译
-
-#### 环境要求
-- Windows 10 / 11 (x86_64)
-- Rust 工具链（`stable-x86_64-pc-windows-msvc`）与 MSVC Build Tools
-- Microsoft Edge WebView2 Runtime（Windows 11 默认内置）
-
-#### 构建与测试命令
+### 本地编译要求与命令
+- **环境要求**：Windows 10 / 11 (`x86_64`)、Rust `stable-x86_64-pc-windows-msvc` 工具链、MSVC Build Tools、Microsoft Edge WebView2 Runtime。
 ```powershell
 # 运行全部单元测试
 cargo test
 
-# 编译 Release 可执行文件
+# 编译 Release 成品
 cargo build --release
 ```
 
-> 提示：项目内 [`.cargo/config.toml`](.cargo/config.toml) 默认配置了 `target-dir = "../../data/cache/cargo-target"` 以适配便携一体化开发环境；若作为独立源码仓库单独克隆编译，可按需修改或删除该配置项以输出到默认 `target/` 目录。
+---
+
+## 📋 更新日志
+
+完整版本迭代历史请查看 👉 [CHANGELOG.md](https://github.com/ZhangSir9901/AideRun/blob/main/CHANGELOG.md)
 
 ---
 
-## 更新日志
+## 💬 意见反馈与技术支持
 
-详细变更记录请参阅 [CHANGELOG.md](CHANGELOG.md)。
+项目持续优化迭代中，如果您在使用过程中遇到了任何问题、发现 Bug 或有更好的功能建议，**非常欢迎提交反馈交流！**
 
+*   <img src="https://cdn.simpleicons.org/github/181717" width="16" align="center" /> **开源仓库**：[ZhangSir9901/AideRun](https://github.com/ZhangSir9901/AideRun)
+*   <img src="https://cdn.simpleicons.org/github/181717" width="16" align="center" /> **问题反馈**：欢迎前往 [Issues](https://github.com/ZhangSir9901/AideRun/issues) 留言探讨
+
+---
+
+## 👥 贡献者 (Contributors)
+
+感谢所有参与反馈和探讨的朋友们！
+
+<a href="https://github.com/ZhangSir9901/AideRun/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=ZhangSir9901/AideRun" />
+</a>
+
+## 📈 关注曲线 (Star History)
+
+[![Star History Chart](https://api.star-history.com/svg?repos=ZhangSir9901/AideRun&type=Date)](https://star-history.com/#ZhangSir9901/AideRun&Date)
+
+<br>
+<div align="center">
+  <i>"Talk is cheap. Show me the code." —— 保持热爱，奔赴山海。欢迎大家下载体验并提出宝贵意见！</i>
+</div>

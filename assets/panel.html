@@ -371,6 +371,52 @@
   .status-dot.warn { background: #f59e0b; }
   .status-dot.err { background: #ef4444; }
   @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.45; transform: scale(1.25); } }
+  @keyframes updateBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.38; } }
+
+  .status-right-wrap {
+    display: flex; align-items: center; gap: 7px; flex-shrink: 0;
+  }
+  .btn-self-update-pill {
+    display: none;
+    border: 1px solid rgba(239, 68, 68, 0.40);
+    background: rgba(239, 68, 68, 0.14);
+    color: #b91c1c;
+    font-family: inherit;
+    font-size: 11px; font-weight: 700;
+    padding: 2px 8px; border-radius: 999px;
+    cursor: pointer; white-space: nowrap;
+    animation: updateBlink 1.4s ease-in-out infinite;
+    transition: background 0.15s ease, transform 0.12s ease;
+  }
+  .btn-self-update-pill.visible { display: inline-flex; align-items: center; gap: 4px; }
+  .btn-self-update-pill:hover {
+    animation: none;
+    background: rgba(239, 68, 68, 0.85); color: #ffffff;
+    transform: translateY(-1px);
+  }
+  .icon-link-btn {
+    width: 22px; height: 22px; border-radius: 6px;
+    border: 1px solid transparent; background: transparent;
+    color: #5b6978; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: all 0.15s ease;
+  }
+  .icon-link-btn:hover {
+    background: rgba(255, 255, 255, 0.56);
+    border-color: rgba(255, 255, 255, 0.72);
+    color: #1A252F; transform: translateY(-1px);
+  }
+  .self-progress-track {
+    width: 100%; height: 10px; border-radius: 999px;
+    background: rgba(255, 255, 255, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    overflow: hidden;
+  }
+  .self-progress-fill {
+    height: 100%; width: 0%; border-radius: 999px;
+    background: linear-gradient(90deg, #2563eb, #0d9488, #10b981);
+    transition: width 0.2s ease;
+  }
 </style>
 </head>
 <body>
@@ -556,6 +602,17 @@
           </div>
         </div>
 
+        <div class="glass-card" style="padding: 8px 14px; flex-direction: row; align-items: center; justify-content: space-between; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 11.6px;">
+            <span style="font-weight: 700;">🚀 AideRun 启动器无感自升级</span>
+            <span class="desc-xs">当前: <strong id="self-local-ver">--</strong> · 远端: <strong id="self-remote-ver">自动检测中</strong></span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+            <button class="btn btn-xs" id="btn-check-self-update">🔍 检查自身</button>
+            <button class="btn btn-primary btn-xs" id="btn-run-self-update" disabled>⚡ 无感热替换升级</button>
+          </div>
+        </div>
+
         <div class="glass-card" style="flex: 1; min-height: 0;">
           <div class="card-hd" style="margin-bottom: 6px;">
             <div class="card-title">无痕升级护盾与操作日志</div>
@@ -668,13 +725,41 @@
       </div>
     </div>
 
+    <!-- 轻量磨砂弹窗 4: AideRun 启动器本体无感自升级进度 -->
+    <div class="modal-mask" id="modal-self-update">
+      <div class="modal-box" style="max-width: 430px;">
+        <div class="card-hd" style="margin-bottom: 0;">
+          <div class="card-title">🚀 AideRun 启动器无感热替换升级</div>
+          <span class="card-badge badge-ok" id="self-upd-pct">0%</span>
+        </div>
+        <div class="self-progress-track">
+          <div class="self-progress-fill" id="self-upd-fill"></div>
+        </div>
+        <div class="desc-xs" id="self-upd-text" style="color: var(--text-dark); font-weight: 600;">
+          正在从 GitHub Release 拉取最新版 AideRun.exe...
+        </div>
+        <div id="self-upd-err-actions" style="display: none; justify-content: flex-end; gap: 8px;">
+          <button class="btn btn-sm" id="btn-self-upd-close">关闭</button>
+          <button class="btn btn-primary btn-sm" id="btn-self-upd-retry">重试升级</button>
+        </div>
+      </div>
+    </div>
+
     <!-- 底部状态栏 -->
     <footer class="statusbar">
       <div class="status-left">
         <span class="status-dot" id="status-dot"></span>
         <span id="status-text">就绪 · 便携环境零系统写入保护已开启</span>
       </div>
-      <div style="font-size: 11px; font-weight: 600; color: var(--text-muted); white-space: nowrap; flex-shrink: 0;" id="status-right">AideRun v1.2.1 · 右键托盘多开</div>
+      <div class="status-right-wrap">
+        <button class="btn-self-update-pill" id="btn-self-update-pill" title="检测到 GitHub 新版本，点击立即执行无感影子热替换并自动重启"></button>
+        <div style="font-size: 11px; font-weight: 600; color: var(--text-muted); white-space: nowrap;" id="status-right">AideRun v1.3.1 · 右键托盘多开</div>
+        <button class="icon-link-btn" id="btn-open-github" title="访问 GitHub 开源仓库 (ZhangSir9901/AideRun)" aria-label="访问 GitHub 开源仓库">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+          </svg>
+        </button>
+      </div>
     </footer>
   </div>
 </div>
@@ -856,6 +941,27 @@
   };
   document.getElementById('btn-close-doctor').onclick = () => doctorModal.classList.remove('open');
 
+  // 右下角 GitHub 开源仓库跳转 & AideRun 启动器自身无感升级
+  let selfRemoteDownloadUrl = '';
+  const selfUpdModal = document.getElementById('modal-self-update');
+  function triggerSelfUpdate() {
+    document.getElementById('self-upd-pct').textContent = '2%';
+    document.getElementById('self-upd-fill').style.width = '2%';
+    document.getElementById('self-upd-text').textContent = '正在准备下载新版 AideRun.exe...';
+    document.getElementById('self-upd-err-actions').style.display = 'none';
+    selfUpdModal.classList.add('open');
+    post('run_self_update', { url: selfRemoteDownloadUrl || null });
+  }
+  document.getElementById('btn-open-github').onclick = () => post('open_github_repo');
+  document.getElementById('btn-self-update-pill').onclick = triggerSelfUpdate;
+  document.getElementById('btn-run-self-update').onclick = triggerSelfUpdate;
+  document.getElementById('btn-check-self-update').onclick = () => {
+    document.getElementById('self-remote-ver').textContent = '检测中...';
+    post('check_self_update', { force: true });
+  };
+  document.getElementById('btn-self-upd-close').onclick = () => selfUpdModal.classList.remove('open');
+  document.getElementById('btn-self-upd-retry').onclick = triggerSelfUpdate;
+
   function setStatus(level, text) {
     const dot = document.getElementById('status-dot');
     dot.className = 'status-dot' + (level && level !== 'ok' ? ' ' + level : '');
@@ -990,6 +1096,7 @@
   function renderState(s) {
     const ideVerSuffix = s.ide_version ? ` · IDE v${s.ide_version}` : '';
     document.getElementById('status-right').textContent = `AideRun v${s.aiderun_version}${ideVerSuffix} · 右键托盘多开`;
+    document.getElementById('self-local-ver').textContent = 'v' + s.aiderun_version;
     document.getElementById('lbl-root-dir').textContent = s.root_dir;
 
     const ideBadge = document.getElementById('badge-ide-ver');
@@ -1131,6 +1238,36 @@
       }
     } else if (evt.kind === 'doctor_report') {
       document.getElementById('doctor-log-box').textContent = evt.report;
+    } else if (evt.kind === 'self_update_result') {
+      const pill = document.getElementById('btn-self-update-pill');
+      const runBtn = document.getElementById('btn-run-self-update');
+      const remoteLbl = document.getElementById('self-remote-ver');
+      if (evt.ok && evt.data) {
+        const d = evt.data;
+        selfRemoteDownloadUrl = d.download_url || '';
+        remoteLbl.textContent = 'v' + (d.remote_version || '?');
+        if (d.has_update) {
+          pill.textContent = `🚀 发现新版 v${d.remote_version} · 点击无感升级`;
+          pill.classList.add('visible');
+          runBtn.disabled = false;
+        } else {
+          pill.classList.remove('visible');
+          runBtn.disabled = true;
+        }
+      } else if (!evt.silent) {
+        remoteLbl.textContent = '检测失败';
+        runBtn.disabled = true;
+      } else {
+        remoteLbl.textContent = '待手动检测';
+      }
+    } else if (evt.kind === 'self_update_progress') {
+      const pct = Math.max(0, Math.min(100, Number(evt.percent || 0)));
+      document.getElementById('self-upd-pct').textContent = pct + '%';
+      document.getElementById('self-upd-fill').style.width = pct + '%';
+      if (evt.text) document.getElementById('self-upd-text').textContent = evt.text;
+    } else if (evt.kind === 'self_update_failed') {
+      document.getElementById('self-upd-text').textContent = '升级失败：' + (evt.error || '请检查代理后重试');
+      document.getElementById('self-upd-err-actions').style.display = 'flex';
     }
   };
 
