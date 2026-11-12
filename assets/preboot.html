@@ -1,0 +1,866 @@
+<!-- AideRun - 启动前置检测独立水晶玻璃拟态引导子窗口界面（网络代理配置 / 便携环境自动部署） -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AideRun 初始化向导</title>
+  <style>
+    :root {
+      --hsl-h1: 204;
+      --hsl-h2: 262;
+      --card-bg: #0DFFFFFF;
+      --card-border: #35FFFFFF;
+      --input-bg: #18FFFFFF;
+      --input-border: #40FFFFFF;
+      --text-dark: #1A252F;
+      --text-muted: rgba(26, 37, 47, 0.74);
+      --accent-blue: #1D6FE8;
+      --accent-green: #118D57;
+      --accent-red: #C63636;
+      --accent-amber: #B26A00;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      overflow: hidden;
+      font-family: "Microsoft YaHei UI", "Segoe UI", system-ui, -apple-system, sans-serif;
+      color: var(--text-dark);
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .root-border {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 20px;
+      border: 1.5px solid #40FFFFFF;
+      background: linear-gradient(
+        135deg,
+        hsla(var(--hsl-h1), 52%, 85%, 0.88) 0%,
+        rgba(244, 248, 254, 0.84) 48%,
+        hsla(var(--hsl-h2), 52%, 85%, 0.88) 100%
+      );
+      backdrop-filter: blur(26px) saturate(145%);
+      -webkit-backdrop-filter: blur(26px) saturate(145%);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .aurora-orb-a,
+    .aurora-orb-b {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(42px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.72;
+    }
+
+    .aurora-orb-a {
+      width: 240px;
+      height: 240px;
+      top: -85px;
+      left: -65px;
+      background: hsla(var(--hsl-h1), 52%, 85%, 0.92);
+    }
+
+    .aurora-orb-b {
+      width: 260px;
+      height: 260px;
+      bottom: -95px;
+      right: -75px;
+      background: hsla(var(--hsl-h2), 52%, 85%, 0.92);
+    }
+
+    .titlebar {
+      position: relative;
+      z-index: 2;
+      height: 44px;
+      padding: 0 14px 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+      cursor: grab;
+    }
+
+    .titlebar:active {
+      cursor: grabbing;
+    }
+
+    .title-left {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      pointer-events: none;
+    }
+
+    .brand-logo {
+      width: 20px;
+      height: 20px;
+      border-radius: 5px;
+      flex-shrink: 0;
+    }
+
+    .title-text {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      color: var(--text-dark);
+    }
+
+    .badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.36);
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      color: var(--text-dark);
+    }
+
+    .badge-warn {
+      color: #8A4B00;
+      background: rgba(255, 214, 150, 0.42);
+      border-color: rgba(220, 140, 20, 0.38);
+    }
+
+    .win-close {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.42);
+      background: rgba(255, 255, 255, 0.24);
+      color: var(--text-dark);
+      font-size: 13px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .win-close:hover:not(:disabled) {
+      background: rgba(198, 54, 54, 0.85);
+      border-color: rgba(198, 54, 54, 0.9);
+      color: #FFFFFF;
+    }
+
+    .win-close:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .content {
+      position: relative;
+      z-index: 2;
+      flex: 1;
+      padding: 14px 18px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+      min-height: 0;
+    }
+
+    .glass-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 13px 15px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.36), 0 6px 20px rgba(26, 37, 47, 0.06);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    .section-head {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .desc {
+      font-size: 12px;
+      line-height: 1.52;
+      color: var(--text-muted);
+      user-select: text;
+    }
+
+    .probe-meta {
+      margin-top: 7px;
+      font-size: 11px;
+      line-height: 1.45;
+      color: var(--text-dark);
+      padding: 6px 9px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.28);
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      user-select: text;
+    }
+
+    .chip-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .chip {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      background: rgba(255, 255, 255, 0.22);
+      color: var(--text-dark);
+      cursor: pointer;
+      transition: all 0.14s ease;
+    }
+
+    .chip:hover {
+      background: rgba(255, 255, 255, 0.48);
+      transform: translateY(-1px);
+    }
+
+    .chip.active {
+      background: rgba(29, 111, 232, 0.16);
+      border-color: rgba(29, 111, 232, 0.55);
+      color: #0D47A1;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 98px 132px 1fr;
+      gap: 8px;
+      align-items: end;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .field label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .glass-input,
+    .glass-select {
+      width: 100%;
+      height: 34px;
+      padding: 0 10px;
+      border-radius: 10px;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      color: var(--text-dark);
+      font-size: 12.5px;
+      font-weight: 600;
+      outline: none;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .glass-input:focus,
+    .glass-select:focus {
+      background: rgba(255, 255, 255, 0.34);
+      border-color: rgba(29, 111, 232, 0.65);
+    }
+
+    .status-line {
+      margin-top: 9px;
+      min-height: 20px;
+      font-size: 11.5px;
+      font-weight: 600;
+      line-height: 1.4;
+      color: var(--text-muted);
+      user-select: text;
+    }
+
+    .status-line.ok {
+      color: var(--accent-green);
+    }
+
+    .status-line.err {
+      color: var(--accent-red);
+    }
+
+    .status-line.busy {
+      color: var(--accent-blue);
+    }
+
+    .footer {
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .footer-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn {
+      height: 34px;
+      padding: 0 14px;
+      border-radius: 11px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      background: rgba(255, 255, 255, 0.28);
+      color: var(--text-dark);
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .btn:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.52);
+      transform: translateY(-1px);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, rgba(29, 111, 232, 0.88), rgba(14, 141, 185, 0.88));
+      border-color: rgba(255, 255, 255, 0.55);
+      color: #FFFFFF;
+      box-shadow: 0 4px 12px rgba(29, 111, 232, 0.24);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: linear-gradient(135deg, rgba(22, 98, 212, 0.96), rgba(12, 126, 166, 0.96));
+    }
+
+    .btn-danger {
+      background: rgba(198, 54, 54, 0.14);
+      border-color: rgba(198, 54, 54, 0.35);
+      color: #9A2222;
+    }
+
+    /* Deploy confirm & declined views */
+    .deploy-ask-card {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 12px;
+      padding: 18px 20px;
+    }
+
+    .hero-question {
+      font-size: 16px;
+      font-weight: 800;
+      line-height: 1.5;
+      color: var(--text-dark);
+      user-select: text;
+    }
+
+    .path-pill {
+      padding: 8px 11px;
+      border-radius: 12px;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      font-size: 11.5px;
+      line-height: 1.45;
+      color: var(--text-dark);
+      word-break: break-all;
+      user-select: text;
+    }
+
+    .progress-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      gap: 8px;
+    }
+
+    .stage-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+
+    .pct-pill {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--accent-blue);
+      padding: 2px 9px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.42);
+      border: 1px solid rgba(255, 255, 255, 0.65);
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 11px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.36);
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      overflow: hidden;
+      margin-bottom: 7px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #1D6FE8, #14A098, #28B463);
+      transition: width 0.2s ease;
+    }
+
+    .progress-detail {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      min-height: 17px;
+    }
+
+    .log-box {
+      flex: 1;
+      min-height: 120px;
+      max-height: 162px;
+      overflow-y: auto;
+      padding: 9px 11px;
+      border-radius: 14px;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      font-family: "Cascadia Mono", Consolas, "Courier New", monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      color: var(--text-dark);
+      white-space: pre-wrap;
+      word-break: break-all;
+      user-select: text;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="root-border">
+    <div class="aurora-orb-a"></div>
+    <div class="aurora-orb-b"></div>
+
+    <header class="titlebar" id="titlebar">
+      <div class="title-left">
+        <img class="brand-logo" src="{{BRAND_LOGO_DATA_URI}}" alt="AideRun" />
+        <span class="title-text" id="winTitleText">AideRun 初始化检测</span>
+        <span class="badge" id="winBadgeText">准备就绪</span>
+      </div>
+      <button class="win-close" id="btnClose" title="关闭并退出">✕</button>
+    </header>
+
+    <!-- 视图一：代理检测与配置子窗口 -->
+    <main class="content hidden" id="viewProxy">
+      <section class="glass-card">
+        <div class="section-head"><span>🌐</span><span>未检测到可用的 Google 代理环境</span></div>
+        <div class="desc">
+          AideRun 启动时需确认当前网络可稳定访问 Google 服务，以确保官网安装部署及 Gemini 辅助能力正常工作。
+        </div>
+        <div class="probe-meta" id="proxyProbeMeta">正在扫描常见 Windows 代理端口...</div>
+      </section>
+
+      <section class="glass-card">
+        <div class="chip-label">常用 Windows 代理软件端口快速填入：</div>
+        <div class="chips" id="proxyChips">
+          <button type="button" class="chip" data-scheme="http" data-host="127.0.0.1" data-port="7890">Clash 7890</button>
+          <button type="button" class="chip" data-scheme="http" data-host="127.0.0.1" data-port="7897">Verge 7897</button>
+          <button type="button" class="chip" data-scheme="http" data-host="127.0.0.1" data-port="10809">v2rayN 10809</button>
+          <button type="button" class="chip" data-scheme="socks5" data-host="127.0.0.1" data-port="10808">SOCKS5 10808</button>
+          <button type="button" class="chip" data-scheme="socks5" data-host="127.0.0.1" data-port="1080">SS 1080</button>
+          <button type="button" class="chip" data-scheme="socks5" data-host="127.0.0.1" data-port="2080">NekoBox 2080</button>
+        </div>
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="proxyScheme">协议类型</label>
+            <select id="proxyScheme" class="glass-select">
+              <option value="http">HTTP</option>
+              <option value="socks5">SOCKS5</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="proxyHost">代理地址</label>
+            <input id="proxyHost" class="glass-input" type="text" value="127.0.0.1" placeholder="127.0.0.1" />
+          </div>
+          <div class="field">
+            <label for="proxyPort">端口号（或粘贴完整 URL）</label>
+            <input id="proxyPort" class="glass-input" type="text" value="7890" placeholder="7890" />
+          </div>
+        </div>
+
+        <div class="status-line" id="proxyStatusLine">提示：请先开启代理软件，然后点击「测试连接并继续」。</div>
+      </section>
+
+      <footer class="footer">
+        <div class="footer-group">
+          <button type="button" class="btn" id="btnProxyQuit">退出</button>
+          <button type="button" class="btn" id="btnProxyRecheck">重新自动检测</button>
+        </div>
+        <button type="button" class="btn btn-primary" id="btnProxyTest">✓ 测试连接并继续</button>
+      </footer>
+    </main>
+
+    <!-- 视图二：便携 IDE 环境确认与一键官网下载部署子窗口 -->
+    <main class="content hidden" id="viewDeploy">
+      <!-- 2A：询问是否立即部署 -->
+      <div id="deployAskPane" class="content" style="padding: 0;">
+        <section class="glass-card deploy-ask-card">
+          <div class="hero-question">
+            当前目录没有 Antigravity IDE 环境，是否开始现在部署 Antigravity IDE 便携开发环境？
+          </div>
+          <div class="path-pill">
+            <strong>目标部署目录：</strong><span id="deployTargetRoot"></span>
+          </div>
+          <div class="desc">
+            点击“是，立即下载部署”后，程序将自动从官方服务器获取最新版 Antigravity IDE 安装包并在当前目录完成零注册表便携化部署。
+          </div>
+        </section>
+
+        <footer class="footer">
+          <span class="desc">确认前不会在当前目录生成任何文件夹</span>
+          <div class="footer-group">
+            <button type="button" class="btn" id="btnDeployNo">否</button>
+            <button type="button" class="btn btn-primary" id="btnDeployYes">是，立即下载部署</button>
+          </div>
+        </footer>
+      </div>
+
+      <!-- 2B：用户选择“否”后的提示收官页 -->
+      <div id="deployDeclinedPane" class="content hidden" style="padding: 0;">
+        <section class="glass-card deploy-ask-card">
+          <div class="hero-question">
+            请把程序放在你需要部署的目录再次运行
+          </div>
+          <div class="desc">
+            已按您的选择取消部署。当前目录未写入任何配置文件或缓存目录，您可以将 AideRun.exe 移动到目标文件夹后重新运行。
+          </div>
+        </section>
+
+        <footer class="footer">
+          <span></span>
+          <button type="button" class="btn btn-primary" id="btnDeclinedExit">确定并退出</button>
+        </footer>
+      </div>
+
+      <!-- 2C：官网下载与零注册表便携解压实时进度页 -->
+      <div id="deployProgressPane" class="content hidden" style="padding: 0;">
+        <section class="glass-card">
+          <div class="progress-head">
+            <span class="stage-name" id="deployStage">正在准备部署任务...</span>
+            <span class="pct-pill" id="deployPct">0%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="deployFill"></div>
+          </div>
+          <div class="progress-detail" id="deployDetail">即将连接官方源获取最新安装包版本...</div>
+        </section>
+
+        <div class="log-box" id="deployLogs">[信息] 已确认开始在线部署便携 Antigravity IDE 开发环境...</div>
+
+        <footer class="footer hidden" id="deployErrorFooter">
+          <span class="status-line err" id="deployErrHint" style="margin-top: 0;">部署遇到错误</span>
+          <div class="footer-group">
+            <button type="button" class="btn btn-danger" id="btnDeployExit">退出程序</button>
+            <button type="button" class="btn btn-primary" id="btnDeployRetry">重试下载部署</button>
+          </div>
+        </footer>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      // HSL 360° 七彩呼吸流光引擎：50ms 驱动，色相步长 0.35°，S=0.52，L=0.85
+      let hue = 198;
+      const rootStyle = document.documentElement.style;
+      setInterval(function () {
+        hue = (hue + 0.35) % 360;
+        rootStyle.setProperty("--hsl-h1", hue.toFixed(2));
+        rootStyle.setProperty("--hsl-h2", ((hue + 56) % 360).toFixed(2));
+      }, 50);
+
+      function postIpc(action, payload) {
+        if (window.ipc && typeof window.ipc.postMessage === "function") {
+          window.ipc.postMessage(JSON.stringify({ action: action, payload: payload || {} }));
+        }
+      }
+
+      const init = {{PREBOOT_INIT_JSON}};
+      let busyProxy = false;
+      let busyDeploy = false;
+
+      // 无边框标题栏拖拽
+      const titlebar = document.getElementById("titlebar");
+      const btnClose = document.getElementById("btnClose");
+      titlebar.addEventListener("mousedown", function (e) {
+        if (e.button === 0 && !e.target.closest("button")) {
+          postIpc("drag_window");
+        }
+      });
+      btnClose.addEventListener("click", function () {
+        if (busyDeploy) return;
+        postIpc("quit_app");
+      });
+
+      const elTitle = document.getElementById("winTitleText");
+      const elBadge = document.getElementById("winBadgeText");
+      const viewProxy = document.getElementById("viewProxy");
+      const viewDeploy = document.getElementById("viewDeploy");
+
+      // ======================== 代理配置交互 ========================
+      const proxyScheme = document.getElementById("proxyScheme");
+      const proxyHost = document.getElementById("proxyHost");
+      const proxyPort = document.getElementById("proxyPort");
+      const proxyProbeMeta = document.getElementById("proxyProbeMeta");
+      const proxyStatusLine = document.getElementById("proxyStatusLine");
+      const btnProxyTest = document.getElementById("btnProxyTest");
+      const btnProxyRecheck = document.getElementById("btnProxyRecheck");
+      const btnProxyQuit = document.getElementById("btnProxyQuit");
+
+      function parseAndFillProxyInput(rawVal) {
+        const val = (rawVal || "").trim();
+        if (!val) return;
+        const m = val.match(/^(https?|socks5h?):\/\/([^:\s]+):(\d{1,5})\/?$/i);
+        if (m) {
+          proxyScheme.value = m[1].toLowerCase().startsWith("socks5") ? "socks5" : "http";
+          proxyHost.value = m[2];
+          proxyPort.value = m[3];
+          return;
+        }
+        const hostPort = val.match(/^([^:\s]+):(\d{1,5})$/);
+        if (hostPort) {
+          proxyHost.value = hostPort[1];
+          proxyPort.value = hostPort[2];
+        }
+      }
+
+      function applyChipSelection(scheme, host, port) {
+        proxyScheme.value = scheme;
+        proxyHost.value = host;
+        proxyPort.value = String(port);
+        document.querySelectorAll("#proxyChips .chip").forEach(function (btn) {
+          const match = btn.dataset.scheme === scheme && btn.dataset.port === String(port);
+          btn.classList.toggle("active", match);
+        });
+      }
+
+      document.querySelectorAll("#proxyChips .chip").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          applyChipSelection(btn.dataset.scheme, btn.dataset.host, btn.dataset.port);
+          proxyStatusLine.className = "status-line";
+          proxyStatusLine.textContent = "已填入常用端口 " + btn.dataset.port + "，请点击「测试连接并继续」。";
+        });
+      });
+
+      proxyPort.addEventListener("change", function () {
+        parseAndFillProxyInput(proxyPort.value);
+      });
+      proxyPort.addEventListener("paste", function (e) {
+        setTimeout(function () {
+          parseAndFillProxyInput(proxyPort.value);
+        }, 0);
+      });
+
+      function setProxyBusy(flag) {
+        busyProxy = flag;
+        btnProxyTest.disabled = flag;
+        btnProxyRecheck.disabled = flag;
+        btnProxyQuit.disabled = flag;
+        btnProxyTest.textContent = flag ? "正在检测 Google 连通性..." : "✓ 测试连接并继续";
+      }
+
+      function submitManualProxy() {
+        if (busyProxy) return;
+        parseAndFillProxyInput(proxyPort.value);
+        const scheme = proxyScheme.value.trim() || "http";
+        const host = (proxyHost.value || "").trim() || "127.0.0.1";
+        const port = (proxyPort.value || "").trim();
+        if (!/^\d{1,5}$/.test(port) || Number(port) < 1 || Number(port) > 65535) {
+          proxyStatusLine.className = "status-line err";
+          proxyStatusLine.textContent = "请输入有效端口号（1 - 65535）或完整代理地址。";
+          proxyPort.focus();
+          return;
+        }
+        const endpoint = scheme + "://" + host + ":" + port;
+        setProxyBusy(true);
+        proxyStatusLine.className = "status-line busy";
+        proxyStatusLine.textContent = "正在通过 " + endpoint + " 访问 Google，请稍候...";
+        postIpc("test_manual_proxy", { proxy: endpoint });
+      }
+
+      btnProxyTest.addEventListener("click", submitManualProxy);
+      btnProxyRecheck.addEventListener("click", function () {
+        if (busyProxy) return;
+        setProxyBusy(true);
+        proxyStatusLine.className = "status-line busy";
+        proxyStatusLine.textContent = "正在重新扫描系统代理与常用本地端口...";
+        postIpc("recheck_auto_proxy");
+      });
+      btnProxyQuit.addEventListener("click", function () {
+        if (!busyProxy) postIpc("quit_app");
+      });
+      [proxyHost, proxyPort].forEach(function (inp) {
+        inp.addEventListener("keydown", function (e) {
+          if (e.key === "Enter") submitManualProxy();
+        });
+      });
+
+      // ======================== 部署确认交互 ========================
+      const deployAskPane = document.getElementById("deployAskPane");
+      const deployDeclinedPane = document.getElementById("deployDeclinedPane");
+      const deployProgressPane = document.getElementById("deployProgressPane");
+      const deployTargetRoot = document.getElementById("deployTargetRoot");
+      const deployStage = document.getElementById("deployStage");
+      const deployPct = document.getElementById("deployPct");
+      const deployFill = document.getElementById("deployFill");
+      const deployDetail = document.getElementById("deployDetail");
+      const deployLogs = document.getElementById("deployLogs");
+      const deployErrorFooter = document.getElementById("deployErrorFooter");
+      const deployErrHint = document.getElementById("deployErrHint");
+
+      function appendDeployLog(line) {
+        if (!line) return;
+        deployLogs.textContent += "\n" + line;
+        deployLogs.scrollTop = deployLogs.scrollHeight;
+      }
+
+      function startOfficialDeploy() {
+        busyDeploy = true;
+        btnClose.disabled = true;
+        deployAskPane.classList.add("hidden");
+        deployDeclinedPane.classList.add("hidden");
+        deployProgressPane.classList.remove("hidden");
+        deployErrorFooter.classList.add("hidden");
+        deployPct.textContent = "2%";
+        deployFill.style.width = "2%";
+        deployStage.textContent = "正在连接官方下载服务...";
+        deployDetail.textContent = "准备查询最新 Windows x64 安装包并写入当前目录...";
+        postIpc("confirm_deploy");
+      }
+
+      document.getElementById("btnDeployYes").addEventListener("click", startOfficialDeploy);
+      document.getElementById("btnDeployRetry").addEventListener("click", function () {
+        appendDeployLog("[*] 正在重试官方下载部署...");
+        startOfficialDeploy();
+      });
+      document.getElementById("btnDeployNo").addEventListener("click", function () {
+        deployAskPane.classList.add("hidden");
+        deployDeclinedPane.classList.remove("hidden");
+        elBadge.textContent = "已取消";
+      });
+      document.getElementById("btnDeclinedExit").addEventListener("click", function () {
+        postIpc("quit_app");
+      });
+      document.getElementById("btnDeployExit").addEventListener("click", function () {
+        postIpc("quit_app");
+      });
+
+      // ======================== 渲染初始化模式 ========================
+      if (init.mode === "proxy") {
+        viewProxy.classList.remove("hidden");
+        elTitle.textContent = "AideRun · 网络代理配置";
+        elBadge.textContent = "Google 连通检测未通过";
+        elBadge.classList.add("badge-warn");
+
+        if (init.suggested_proxy) {
+          parseAndFillProxyInput(init.suggested_proxy);
+        } else if (init.listening_ports && init.listening_ports.length > 0) {
+          const first = init.listening_ports[0];
+          applyChipSelection(first.scheme, "127.0.0.1", first.port);
+        }
+
+        const hints = [];
+        if (init.running_clients && init.running_clients.length > 0) {
+          hints.push("检测到代理进程：" + init.running_clients.join("、"));
+        }
+        if (init.listening_ports && init.listening_ports.length > 0) {
+          const listStr = init.listening_ports.map(function (p) {
+            return p.label + "(" + p.scheme + ":" + p.port + ")";
+          }).join("、");
+          hints.push("监听中端口：" + listStr + "（暂未成功连通 Google）");
+        }
+        if (init.probe_detail) {
+          hints.push(init.probe_detail);
+        }
+        proxyProbeMeta.textContent = hints.length > 0
+          ? hints.join(" ｜ ")
+          : "已自动探测系统代理及常见本地端口（7890 / 7897 / 10809 / 10808 / 1080 / 2080），均暂未连通 Google。";
+      } else {
+        viewDeploy.classList.remove("hidden");
+        elTitle.textContent = "AideRun · 便携环境初始化";
+        elBadge.textContent = "首次部署确认";
+        deployTargetRoot.textContent = init.root_dir || "";
+      }
+
+      // ======================== Rust 事件回调 ========================
+      window.__onAideEvent = function (ev) {
+        if (!ev || !ev.kind) return;
+        if (ev.kind === "proxy_result") {
+          setProxyBusy(false);
+          if (ev.ok) {
+            proxyStatusLine.className = "status-line ok";
+            proxyStatusLine.textContent = ev.message || "Google 连通成功，正在进入下一步...";
+          } else {
+            proxyStatusLine.className = "status-line err";
+            proxyStatusLine.textContent = ev.message || "仍无法通过当前设置访问 Google，请确认代理客户端已启用。";
+          }
+        } else if (ev.kind === "deploy_progress") {
+          const pct = Math.max(0, Math.min(100, Number(ev.percent || 0)));
+          deployPct.textContent = pct + "%";
+          deployFill.style.width = pct + "%";
+          if (ev.stage) deployStage.textContent = ev.stage;
+          if (ev.detail) deployDetail.textContent = ev.detail;
+          if (ev.log_line) appendDeployLog(ev.log_line);
+        } else if (ev.kind === "deploy_failed") {
+          busyDeploy = false;
+          btnClose.disabled = false;
+          deployStage.textContent = "官方便携部署失败";
+          deployDetail.textContent = ev.error || "未知错误";
+          deployErrHint.textContent = "部署中断：" + (ev.error || "请检查网络代理后重试");
+          appendDeployLog("[错误] " + (ev.error || "部署失败"));
+          deployErrorFooter.classList.remove("hidden");
+        }
+      };
+    })();
+  </script>
+</body>
+</html>
+

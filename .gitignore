@@ -1,0 +1,29 @@
+# AideRun - Git 版本控制忽略清单（保留 Release/AideRun.exe 成品，忽略其余编译与运行临时产物）
+
+# Rust 编译目标与调试符号
+/target/
+*.pdb
+*.rlib
+*.rmeta
+*.d
+
+# 临时下载及安装包碎片
+*.download.part
+*.tmp
+*.log
+
+# 仅保留 Release/ 下的成品可执行文件，忽略根目录散落的其他二进制
+/*.exe
+!Release/*.exe
+
+# 便携运行时数据目录（绝不误传个人数据或大型缓存）
+/data/
+/projects/
+/tools/
+/.portable_root
+
+# 系统缩略图与编辑器临时文件
+.DS_Store
+Thumbs.db
+desktop.ini
+

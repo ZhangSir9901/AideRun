@@ -1,0 +1,1142 @@
+<!-- AideRun - Antigravity IDE 860x560 水晶磨砂高透玻璃拟态启动面板界面 -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AideRun 控制台</title>
+<style>
+  :root {
+    --hsl-primary: hsl(210, 52%, 85%);
+    --hsl-secondary: hsl(330, 52%, 85%);
+    --hsl-border: hsla(210, 52%, 85%, 0.72);
+    --text-dark: #1A252F;
+    --text-muted: rgba(26, 37, 47, 0.70);
+    --card-bg: rgba(255, 255, 255, 0.05);
+    --card-stroke: rgba(255, 255, 255, 0.21);
+    --input-bg: rgba(255, 255, 255, 0.094);
+    --input-stroke: rgba(255, 255, 255, 0.25);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent !important;
+    font-family: "Segoe UI Variable", "Microsoft YaHei UI", "Segoe UI", system-ui, sans-serif;
+    color: var(--text-dark);
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+  }
+
+  .shell-pad {
+    width: 100%;
+    height: 100%;
+    padding: 4px;
+    background: transparent;
+  }
+
+  .root-border {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 20px;
+    border: 1.5px solid rgba(255, 255, 255, 0.25);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(142deg, rgba(240, 247, 255, 0.90) 0%, rgba(226, 238, 252, 0.85) 52%, rgba(238, 245, 253, 0.89) 100%);
+    backdrop-filter: blur(28px) saturate(155%);
+    box-shadow:
+      0 2px 10px rgba(26, 37, 47, 0.08),
+      inset 0 0 0 1px var(--hsl-border);
+  }
+
+  .aurora-orb-a, .aurora-orb-b {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    filter: blur(52px);
+    z-index: 0;
+  }
+  .aurora-orb-a {
+    width: 390px; height: 390px; top: -120px; left: -80px;
+    background: radial-gradient(circle, var(--hsl-primary) 0%, transparent 70%);
+    opacity: 0.72;
+  }
+  .aurora-orb-b {
+    width: 420px; height: 420px; bottom: -140px; right: -70px;
+    background: radial-gradient(circle, var(--hsl-secondary) 0%, transparent 72%);
+    opacity: 0.68;
+  }
+
+  .titlebar {
+    position: relative;
+    z-index: 2;
+    height: 50px;
+    padding: 0 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.16);
+    cursor: default;
+  }
+
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-logo {
+    width: 28px; height: 28px; object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(26, 37, 47, 0.16));
+    pointer-events: none;
+  }
+  .brand-title { display: flex; flex-direction: column; line-height: 1.15; }
+  .brand-name {
+    font-size: 14px; font-weight: 700; letter-spacing: 0.3px;
+    color: var(--text-dark); display: flex; align-items: center; gap: 6px;
+  }
+  .ver-pill {
+    font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 99px;
+    background: rgba(255, 255, 255, 0.38);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    color: var(--text-dark);
+  }
+  .brand-sub { font-size: 10.5px; color: var(--text-muted); max-width: 215px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .nav-tabs {
+    display: flex; align-items: center; gap: 4px; padding: 3px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.22);
+    border: 1px solid rgba(255, 255, 255, 0.36);
+  }
+  .tab-pill {
+    border: none; background: transparent; color: var(--text-muted);
+    font-family: inherit; font-size: 12px; font-weight: 600;
+    padding: 5px 12px; border-radius: 9px; cursor: pointer;
+    transition: all 0.18s ease;
+  }
+  .tab-pill:hover { color: var(--text-dark); background: rgba(255, 255, 255, 0.32); }
+  .tab-pill.active {
+    color: var(--text-dark); background: rgba(255, 255, 255, 0.72);
+    box-shadow: 0 2px 6px rgba(26, 37, 47, 0.08);
+  }
+
+  .win-actions { display: flex; align-items: center; gap: 6px; }
+  .win-btn {
+    width: 28px; height: 28px; border-radius: 9px;
+    border: 1px solid rgba(255, 255, 255, 0.38);
+    background: rgba(255, 255, 255, 0.22);
+    color: var(--text-dark); font-size: 13px; font-weight: 700;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s ease;
+  }
+  .win-btn:hover { background: rgba(255, 255, 255, 0.62); }
+  .win-btn.close:hover { background: rgba(235, 87, 87, 0.85); color: #fff; border-color: rgba(235, 87, 87, 0.9); }
+
+  .main-stage {
+    position: relative; z-index: 2; flex: 1;
+    padding: 12px 14px 10px; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+
+  .tab-view { display: none; height: 100%; flex-direction: column; gap: 10px; min-height: 0; }
+  .tab-view.active { display: flex; }
+
+  .glass-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-stroke);
+    border-radius: 16px;
+    backdrop-filter: blur(16px);
+    box-shadow:
+      0 6px 20px rgba(26, 37, 47, 0.055),
+      inset 0 1px 0 rgba(255, 255, 255, 0.55);
+    padding: 12px 15px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 8px; }
+  .card-title { font-size: 13px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 6px; }
+  .card-badge {
+    font-size: 10.5px; font-weight: 600; padding: 2px 8px; border-radius: 99px;
+    background: rgba(255, 255, 255, 0.42);
+    border: 1px solid rgba(255, 255, 255, 0.58);
+    color: var(--text-dark); white-space: nowrap;
+  }
+  .badge-ok { background: rgba(16, 185, 129, 0.16); border-color: rgba(16, 185, 129, 0.35); color: #0b5e42; }
+  .badge-warn { background: rgba(245, 158, 11, 0.18); border-color: rgba(245, 158, 11, 0.40); color: #784200; }
+  .badge-err { background: rgba(239, 68, 68, 0.16); border-color: rgba(239, 68, 68, 0.36); color: #8c1c1c; }
+  .badge-info { background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.35); color: #1e40af; }
+
+  .grid-2 { display: grid; grid-template-columns: 1.02fr 1.18fr; gap: 11px; flex: 1; min-height: 0; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .col-stack { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+
+  .btn {
+    border: 1px solid rgba(255, 255, 255, 0.55); border-radius: 11px;
+    font-family: inherit; font-size: 12px; font-weight: 600;
+    color: var(--text-dark); background: rgba(255, 255, 255, 0.42);
+    padding: 7px 12px; cursor: pointer; transition: all 0.16s ease;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    white-space: nowrap;
+  }
+  .btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.78);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(26, 37, 47, 0.08);
+  }
+  .btn:active:not(:disabled) { transform: translateY(0); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 55%, #1d4ed8 100%);
+    color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.45);
+    box-shadow: 0 5px 15px rgba(37, 99, 235, 0.28);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+    box-shadow: 0 7px 18px rgba(37, 99, 235, 0.35); color: #ffffff;
+  }
+  .btn-accent {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.88), rgba(5, 150, 105, 0.92));
+    color: #ffffff; border-color: rgba(255, 255, 255, 0.42);
+  }
+  .btn-accent:hover:not(:disabled) {
+    background: linear-gradient(135deg, rgba(5, 150, 105, 0.95), rgba(4, 120, 87, 0.98)); color: #ffffff;
+  }
+  .btn-warn {
+    background: rgba(245, 158, 11, 0.18);
+    border-color: rgba(245, 158, 11, 0.42);
+    color: #713f12;
+  }
+  .btn-danger-ghost {
+    background: rgba(239, 68, 68, 0.11);
+    border-color: rgba(239, 68, 68, 0.28);
+    color: #991b1b;
+  }
+  .btn-danger-ghost:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.84);
+    color: #ffffff;
+  }
+  .btn-hero { width: 100%; padding: 11px 16px; font-size: 13.5px; border-radius: 13px; }
+  .btn-sm { padding: 5px 10px; font-size: 11.5px; border-radius: 9px; }
+  .btn-xs { padding: 3px 8px; font-size: 11px; border-radius: 8px; }
+
+  .glass-input {
+    background: var(--input-bg); border: 1px solid var(--input-stroke);
+    border-radius: 10px; color: var(--text-dark);
+    font-family: inherit; font-size: 12px; font-weight: 500;
+    padding: 7px 10px; outline: none;
+    box-shadow: inset 0 1px 2px rgba(26, 37, 47, 0.05);
+    user-select: text;
+  }
+  .glass-input::placeholder { color: rgba(26, 37, 47, 0.45); }
+  .glass-input:focus { background: rgba(255, 255, 255, 0.42); border-color: rgba(59, 130, 246, 0.55); }
+
+  .kv-list { display: flex; flex-direction: column; gap: 6px; font-size: 11.8px; }
+  .kv-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 4px 8px; border-radius: 9px; background: rgba(255, 255, 255, 0.22);
+  }
+  .kv-k { color: var(--text-muted); font-weight: 500; }
+  .kv-v {
+    color: var(--text-dark); font-weight: 600; max-width: 225px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; user-select: text;
+  }
+
+  .scroll-list {
+    flex: 1; overflow-y: auto; display: flex; flex-direction: column;
+    gap: 5px; padding-right: 3px; min-height: 0;
+  }
+  .scroll-list::-webkit-scrollbar { width: 5px; }
+  .scroll-list::-webkit-scrollbar-thumb { background: rgba(26, 37, 47, 0.18); border-radius: 99px; }
+
+  .proj-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 9px; border-radius: 10px;
+    background: rgba(255, 255, 255, 0.26);
+    border: 1px solid rgba(255, 255, 255, 0.42); font-size: 12px;
+  }
+  .proj-name {
+    font-weight: 600; color: var(--text-dark); overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap; max-width: 225px;
+  }
+
+  .chip-wrap { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .chip {
+    border: 1px solid rgba(255, 255, 255, 0.52); background: rgba(255, 255, 255, 0.34);
+    border-radius: 99px; padding: 4px 10px; font-size: 11.5px; font-weight: 600;
+    color: var(--text-dark); cursor: pointer; transition: all 0.14s ease;
+  }
+  .chip:hover { background: rgba(255, 255, 255, 0.72); }
+
+  .switch-row {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 11.8px; color: var(--text-dark); padding: 2px 2px;
+  }
+  .switch-row label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 500; }
+
+  .desc-xs { font-size: 11.2px; color: var(--text-muted); line-height: 1.45; }
+
+  /* 通用玻璃明细表格（用于 Tab 2 垃圾组成 & Tab 4 组件管理平台） */
+  .glass-table {
+    width: 100%; border-collapse: separate; border-spacing: 0 5px;
+    font-size: 11.8px;
+  }
+  .glass-table thead th {
+    position: sticky; top: 0; z-index: 1;
+    background: rgba(235, 243, 253, 0.90);
+    backdrop-filter: blur(8px);
+    text-align: left; font-size: 11px; font-weight: 700; color: var(--text-muted);
+    padding: 5px 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+  }
+  .glass-table tbody tr td {
+    background: rgba(255, 255, 255, 0.24);
+    border-top: 1px solid rgba(255, 255, 255, 0.42);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.30);
+    padding: 6px 8px;
+    vertical-align: middle;
+  }
+  .glass-table tbody tr td:first-child {
+    border-left: 1px solid rgba(255, 255, 255, 0.42);
+    border-top-left-radius: 10px; border-bottom-left-radius: 10px;
+  }
+  .glass-table tbody tr td:last-child {
+    border-right: 1px solid rgba(255, 255, 255, 0.42);
+    border-top-right-radius: 10px; border-bottom-right-radius: 10px;
+  }
+  .glass-table tbody tr:hover td { background: rgba(255, 255, 255, 0.44); }
+  .mono-xs { font-family: "Cascadia Mono", Consolas, monospace; font-size: 11px; color: var(--text-muted); user-select: text; }
+
+  .log-box {
+    flex: 1; min-height: 0; overflow-y: auto; border-radius: 11px;
+    background: var(--input-bg); border: 1px solid var(--input-stroke);
+    padding: 8px 10px; font-family: "Cascadia Mono", Consolas, monospace;
+    font-size: 11px; line-height: 1.45; color: var(--text-dark);
+    white-space: pre-wrap; user-select: text;
+  }
+
+  /* 轻量磨砂弹窗（用于打包清理二次确认、添加自定义组件与环境自检） */
+  .modal-mask {
+    position: absolute; inset: 0; z-index: 20;
+    background: rgba(26, 37, 47, 0.28);
+    backdrop-filter: blur(8px);
+    display: none; align-items: center; justify-content: center; padding: 18px;
+  }
+  .modal-mask.open { display: flex; }
+  .modal-box {
+    width: 100%; max-width: 470px;
+    border-radius: 18px;
+    background: rgba(242, 247, 255, 0.94);
+    border: 1.5px solid rgba(255, 255, 255, 0.72);
+    box-shadow: 0 18px 42px rgba(26, 37, 47, 0.20);
+    padding: 16px 18px;
+    display: flex; flex-direction: column; gap: 11px;
+  }
+
+  .preset-bar {
+    display: flex; align-items: center; gap: 6px; flex-wrap: nowrap;
+    padding: 5px 9px; margin-bottom: 7px; border-radius: 10px;
+    background: rgba(255, 255, 255, 0.24);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    overflow-x: auto;
+  }
+  .preset-label { font-size: 11.2px; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
+  .btn-preset {
+    background: rgba(255, 255, 255, 0.54);
+    border-color: rgba(59, 130, 246, 0.26);
+    color: var(--text-dark);
+  }
+  .btn-preset:hover:not(:disabled) {
+    background: rgba(59, 130, 246, 0.14);
+    border-color: rgba(59, 130, 246, 0.55);
+    color: #1e40af;
+  }
+
+  .statusbar {
+    position: relative; z-index: 2; height: 34px; padding: 0 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.18);
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 11.3px; color: var(--text-dark);
+  }
+  .status-left {
+    display: flex; align-items: center; gap: 7px;
+    overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+    flex: 1; min-width: 0; margin-right: 12px;
+  }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; flex-shrink: 0; }
+  .status-dot.busy { background: #3b82f6; animation: pulse 1s infinite; }
+  .status-dot.warn { background: #f59e0b; }
+  .status-dot.err { background: #ef4444; }
+  @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.45; transform: scale(1.25); } }
+</style>
+</head>
+<body>
+<div class="shell-pad">
+  <div class="root-border">
+    <div class="aurora-orb-a"></div>
+    <div class="aurora-orb-b"></div>
+
+    <!-- 顶部栏 (支持拖动) -->
+    <header class="titlebar" id="titlebar">
+      <div class="brand">
+        <img class="brand-logo" src="{{BRAND_LOGO_DATA_URI}}" alt="Antigravity" />
+        <div class="brand-title">
+          <div class="brand-name">AideRun</div>
+          <div class="brand-sub" id="lbl-root-dir">正在读取便携目录...</div>
+        </div>
+      </div>
+
+      <nav class="nav-tabs" aria-label="功能导航">
+        <button class="tab-pill active" data-tab="launch">启动与多开</button>
+        <button class="tab-pill" data-tab="clean">清理与打包</button>
+        <button class="tab-pill" data-tab="upgrade">Win检测升级</button>
+        <button class="tab-pill" data-tab="tools">组件管理</button>
+      </nav>
+
+      <div class="win-actions">
+        <button class="win-btn" id="btn-to-tray" title="隐藏到系统托盘">—</button>
+        <button class="win-btn close" id="btn-quit" title="退出 AideRun">×</button>
+      </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="main-stage">
+
+      <!-- Tab 1: 启动与多开 -->
+      <section class="tab-view active" id="tab-launch">
+        <div class="grid-2">
+          <div class="col-stack">
+            <div class="glass-card" style="flex: 1; justify-content: space-between;">
+              <div>
+                <div class="card-hd">
+                  <div class="card-title">便携主环境工作台</div>
+                  <span class="card-badge" id="badge-ide-ver">检测中</span>
+                </div>
+                <div class="kv-list">
+                  <div class="kv-row"><span class="kv-k">环境隔离</span><span class="kv-v" id="kv-skeleton">检测中...</span></div>
+                  <div class="kv-row"><span class="kv-k">代理链路</span><span class="kv-v" id="kv-proxy">检测中...</span></div>
+                  <div class="kv-row"><span class="kv-k">磁盘特性</span><span class="kv-v" id="kv-fs">检测中...</span></div>
+                  <div class="kv-row"><span class="kv-k">活跃进程</span><span class="kv-v" id="kv-procs">0 个</span></div>
+                </div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+                <button class="btn btn-primary btn-hero" id="btn-launch-main">
+                  🚀 启动 Antigravity IDE（并隐藏至托盘）
+                </button>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                  <button class="btn" id="btn-open-ps">⚡ 便携 PowerShell</button>
+                  <button class="btn" id="btn-open-cmd">⌘ 便携 CMD</button>
+                </div>
+                <div class="switch-row">
+                  <label><input type="checkbox" id="chk-auto-clean" /> 静默启动退出后自动轻度清理</label>
+                  <button class="btn btn-sm" id="btn-shortcut">📌 桌面快捷方式</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-stack">
+            <div class="glass-card" style="flex: 1.15; min-height: 0;">
+              <div class="card-hd">
+                <div class="card-title">项目并行多开 <span class="ver-pill">--new-window</span></div>
+                <button class="btn btn-sm" id="btn-pick-project">📂 打开任意目录</button>
+              </div>
+              <div class="desc-xs" style="margin-bottom: 6px;">复用主账号与扩展库，每个项目以独立窗口同时开工：</div>
+              <div class="scroll-list" id="project-list">
+                <div class="desc-xs">正在扫描 projects 目录...</div>
+              </div>
+            </div>
+
+            <div class="glass-card" style="flex: 0.92;">
+              <div class="card-hd">
+                <div class="card-title">独立隔离分身多开 <span class="ver-pill">data/instances</span></div>
+                <label style="font-size: 11px; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                  <input type="checkbox" id="chk-share-ext" checked /> 共享扩展
+                </label>
+              </div>
+              <div style="display: flex; gap: 6px;">
+                <input class="glass-input" id="inp-instance-name" style="flex: 1;" placeholder="输入分身名，如 work-01 / review" />
+                <button class="btn btn-accent btn-sm" id="btn-launch-instance">新建并多开</button>
+              </div>
+              <div class="chip-wrap" id="instance-chips">
+                <span class="desc-xs">暂无历史隔离分身，输入名称即可秒建。</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 2: 清理与打包（垃圾组成明细 + 双动作 + 程序智能清理） -->
+      <section class="tab-view" id="tab-clean">
+        <div class="glass-card" style="padding: 10px 15px; flex-direction: row; align-items: center; justify-content: space-between;">
+          <div>
+            <div class="card-title">data 便携目录总占用：<span id="lbl-data-total">--</span></div>
+            <div class="desc-xs" id="lbl-clean-lock">正在检测当前目录进程锁状态...</div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <label title="勾选后，当 IDE 退出或启动检测到日常垃圾达到阈值时自动后台清理" style="font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+              <input type="checkbox" id="chk-smart-clean" /> 程序智能清理
+            </label>
+            <button class="btn btn-sm" id="btn-refresh-clean">🔄 刷新扫描</button>
+          </div>
+        </div>
+
+        <div class="glass-card" style="flex: 1; min-height: 0; padding: 11px 14px;">
+          <div class="card-hd" style="margin-bottom: 6px;">
+            <div class="card-title">当前可清理垃圾组成明细</div>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <span class="card-badge badge-info" id="badge-daily-total">日常可释: --</span>
+              <span class="card-badge badge-warn" id="badge-pack-total">打包总可释: --</span>
+            </div>
+          </div>
+          <div class="scroll-list" id="clean-breakdown-wrap">
+            <table class="glass-table">
+              <thead>
+                <tr>
+                  <th style="width: 34%;">垃圾组成项</th>
+                  <th style="width: 11%;">归类</th>
+                  <th style="width: 33%;">相对路径</th>
+                  <th style="width: 10%; text-align: right;">文件数</th>
+                  <th style="width: 12%; text-align: right;">占用空间</th>
+                </tr>
+              </thead>
+              <tbody id="clean-breakdown-body">
+                <tr><td colspan="5" class="desc-xs" style="text-align: center;">正在统计垃圾组成...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="glass-card" style="padding: 10px 15px; flex-direction: row; align-items: center; justify-content: space-between;">
+          <div class="desc-xs" style="max-width: 440px;">
+            完整保留用户设置、<code>settings.json</code>、扩展插件与 <code>projects/</code> 代码；智能保护当前面板运行目录。
+          </div>
+          <div style="display: flex; gap: 9px;">
+            <button class="btn btn-primary" id="btn-clean-daily">✨ 一键清理日常垃圾（推荐）</button>
+            <button class="btn btn-accent" id="btn-clean-pack">📦 打包之前彻底清理</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 3: Windows 版检测与无痕升级（切换标签自动单次检测 + 去除多余检测按钮与冗余构建号） -->
+      <section class="tab-view" id="tab-upgrade">
+        <div class="glass-card">
+          <div class="card-hd">
+            <div class="card-title">Antigravity IDE Windows x64 官方版本检测与零注册表升级</div>
+            <span class="card-badge" id="badge-unpacker">innounp-2 (Inno 6.4+)</span>
+          </div>
+
+          <div class="grid-3" style="margin-bottom: 10px;">
+            <div class="kv-row" style="padding: 8px 10px;">
+              <span class="kv-k">当前本地版</span>
+              <span class="kv-v" id="upg-local-ver">--</span>
+            </div>
+            <div class="kv-row" style="padding: 8px 10px;">
+              <span class="kv-k">官方 Win 最新</span>
+              <span class="kv-v" id="upg-remote-ver">切换自动检测</span>
+            </div>
+            <div class="kv-row" style="padding: 8px 10px;">
+              <span class="kv-k">升级状态</span>
+              <span class="kv-v" id="upg-state-lbl">待检测</span>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 10px;">
+            <input class="glass-input" id="inp-upgrade-url" style="width: 100%;" readonly placeholder="切换到本标签后自动检索 windows-x64/Antigravity IDE.exe 官方直链（本次运行仅自动检测一次）..." />
+          </div>
+
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="btn btn-primary" id="btn-upgrade-online" disabled title="仅当检测到线上版本号大于本地版或选择本地安装包后激活">⬆ 一键在线无痕升级</button>
+            <button class="btn" id="btn-upgrade-local">📁 选择本地安装包 (.exe / .zip)</button>
+            <button class="btn btn-warn" id="btn-upgrade-rollback">↩ 秒级回滚旧版本</button>
+          </div>
+        </div>
+
+        <div class="glass-card" style="flex: 1; min-height: 0;">
+          <div class="card-hd" style="margin-bottom: 6px;">
+            <div class="card-title">无痕升级护盾与操作日志</div>
+            <span class="desc-xs">绝对保护 <code>data/</code> · <code>projects/</code> · <code>tools/</code> · <code>version.dll</code> · <code>config.json</code></span>
+          </div>
+          <div class="log-box" id="upg-log-box">就绪：所有官方单文件 Antigravity IDE.exe 安装包均通过 innounp-2 静默零注册表解包，自动剔除 unins000 垃圾文件并在 data/_upgrade_backup 保留回滚快照。</div>
+        </div>
+      </section>
+
+      <!-- Tab 4: 组件综合管理平台（彻底无 Scoop，展示安装状态 / 本地版本 / 最新版本 / 升级状态 / 装升卸） -->
+      <section class="tab-view" id="tab-tools">
+        <div class="glass-card" style="flex: 1; min-height: 0; padding: 11px 14px;">
+          <div class="card-hd" style="margin-bottom: 6px;">
+            <div class="card-title">
+              零软链接便携组件综合管理平台 <span class="ver-pill">tools/portable</span>
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <button class="btn btn-sm" id="btn-open-doctor">🩺 环境自检</button>
+              <button class="btn btn-sm" id="btn-open-add-custom">➕ 添加自定义组件</button>
+              <button class="btn btn-primary btn-sm" id="btn-refresh-components">🔄 检测组件新版</button>
+            </div>
+          </div>
+
+          <div class="preset-bar">
+            <span class="preset-label">⚡ 新手场景一键配齐：</span>
+            <button class="btn btn-xs btn-preset" data-preset="all" title="一键配齐全部 5 项核心组件 (innounp-2 + uv + 7-Zip + MinGit + Node.js LTS)">🚀 全能开发推荐 (全部5项)</button>
+            <button class="btn btn-xs btn-preset" data-preset="python" title="自动配齐 uv (Python 环境) + MinGit + 7-Zip">🐍 Python / AI (uv+Git)</button>
+            <button class="btn btn-xs btn-preset" data-preset="web" title="自动配齐 Node.js LTS + MinGit + 7-Zip">🌐 前端全栈 (Node+Git)</button>
+            <button class="btn btn-xs btn-preset" data-preset="basic" title="基础装机必备：innounp-2 + MinGit + 7-Zip">🧰 基础装机 (解包+Git)</button>
+          </div>
+
+          <div class="scroll-list">
+            <table class="glass-table">
+              <thead>
+                <tr>
+                  <th style="width: 30%;">组件名称与说明</th>
+                  <th style="width: 11%;">安装状态</th>
+                  <th style="width: 14%;">本地版本</th>
+                  <th style="width: 14%;">官方最新</th>
+                  <th style="width: 14%;">升级状态</th>
+                  <th style="width: 17%; text-align: right;">操作</th>
+                </tr>
+              </thead>
+              <tbody id="comp-table-body">
+                <tr><td colspan="6" class="desc-xs" style="text-align: center;">正在探测组件列表与本地版本...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="glass-card" style="padding: 9px 14px; flex-direction: row; align-items: center; justify-content: space-between;">
+          <div class="desc-xs" id="lbl-tools-summary">
+            所有组件均以零软链接绿色包部署至 <code>tools/portable/</code> 并自动注入便携 PATH，跨盘符拷贝即插即用。
+          </div>
+          <span class="card-badge badge-ok" id="badge-tools-ready">统计中...</span>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- 轻量磨砂弹窗 1: 打包之前彻底清理二次确认 -->
+    <div class="modal-mask" id="modal-pack-clean">
+      <div class="modal-box">
+        <div class="card-hd" style="margin-bottom: 0;">
+          <div class="card-title">📦 打包之前彻底清理确认</div>
+          <span class="card-badge badge-warn" id="modal-pack-size">--</span>
+        </div>
+        <div class="desc-xs" style="color: var(--text-dark);">
+          将全面清理日常运行垃圾及开发包下载/编译缓存（<code>pip / uv / npm / Go / Cargo</code>），为您最大程度压缩分发包体积；同时完整保留 <code>projects/</code> 源码与扩展。
+        </div>
+        <label style="display: flex; align-items: flex-start; gap: 8px; padding: 9px 10px; border-radius: 11px; background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.34); cursor: pointer; font-size: 11.8px; line-height: 1.45;">
+          <input type="checkbox" id="chk-pack-sanitize" style="margin-top: 2px;" />
+          <span>
+            <strong>同时清除个人登录态与对话历史（隐私脱敏）</strong><br />
+            <span class="desc-xs">若打包分享给同事/他人请勾选（清理 Google 登录与对话记录，保留简体中文及免权限白名单）；仅给自己备份清理请勿勾选。</span>
+          </span>
+        </label>
+        <div style="display: flex; justify-content: flex-end; gap: 8px;">
+          <button class="btn btn-sm" id="btn-cancel-pack">取消</button>
+          <button class="btn btn-accent btn-sm" id="btn-confirm-pack">确认执行彻底清理</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 轻量磨砂弹窗 2: 添加自定义便携组件 -->
+    <div class="modal-mask" id="modal-custom-tool">
+      <div class="modal-box">
+        <div class="card-hd" style="margin-bottom: 0;">
+          <div class="card-title">➕ 添加自定义便携组件</div>
+        </div>
+        <div class="desc-xs">支持任意 Win-x64 .zip / .7z / .exe 直链，将持久化写入 <code>data/launcher.toml</code> 并自动注入便携 PATH。</div>
+        <input class="glass-input" id="inp-custom-name" placeholder="组件名称（英文字母/数字/-/_，如 ripgrep / bun）" />
+        <input class="glass-input" id="inp-custom-url" placeholder="官方下载直链（https://.../package.zip）" />
+        <input class="glass-input" id="inp-custom-desc" placeholder="简短用途说明（可选）" />
+        <div style="display: flex; justify-content: flex-end; gap: 8px;">
+          <button class="btn btn-sm" id="btn-cancel-custom">取消</button>
+          <button class="btn btn-primary btn-sm" id="btn-submit-custom">保存并下载安装</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 轻量磨砂弹窗 3: 无 Scoop 便携环境自检报告 -->
+    <div class="modal-mask" id="modal-doctor">
+      <div class="modal-box" style="max-width: 620px; height: 420px;">
+        <div class="card-hd" style="margin-bottom: 0;">
+          <div class="card-title">🩺 便携开发环境健康自检</div>
+          <button class="btn btn-xs" id="btn-close-doctor">关闭</button>
+        </div>
+        <div class="log-box" id="doctor-log-box">正在加载体检报告...</div>
+      </div>
+    </div>
+
+    <!-- 底部状态栏 -->
+    <footer class="statusbar">
+      <div class="status-left">
+        <span class="status-dot" id="status-dot"></span>
+        <span id="status-text">就绪 · 便携环境零系统写入保护已开启</span>
+      </div>
+      <div style="font-size: 11px; font-weight: 600; color: var(--text-muted); white-space: nowrap; flex-shrink: 0;" id="status-right">AideRun v1.2.1 · 右键托盘多开</div>
+    </footer>
+  </div>
+</div>
+
+<script>
+  // 1. HSL 360° 七彩呼吸流光引擎：50ms 间隔 / 步长 0.35° / 饱和度 52% / 亮度 85%
+  (function startRainbowEngine() {
+    let hue = 205;
+    const rootStyle = document.documentElement.style;
+    setInterval(() => {
+      hue = (hue + 0.35) % 360;
+      const h2 = (hue + 115) % 360;
+      rootStyle.setProperty('--hsl-primary', `hsl(${hue.toFixed(2)}, 52%, 85%)`);
+      rootStyle.setProperty('--hsl-secondary', `hsl(${h2.toFixed(2)}, 52%, 85%)`);
+      rootStyle.setProperty('--hsl-border', `hsla(${hue.toFixed(2)}, 52%, 85%, 0.72)`);
+    }, 50);
+  })();
+
+  let sessionUpdateTriggered = false;
+  let sessionToolsRemoteTriggered = false;
+  let cachedPackFmt = '--';
+  let remoteHasUpdate = false;
+  let remoteDownloadUrl = '';
+  let selectedLocalInstaller = null;
+
+  function syncUpgradeButtonState() {
+    const primaryBtn = document.getElementById('btn-upgrade-online');
+    const localBtn = document.getElementById('btn-upgrade-local');
+    const urlInput = document.getElementById('inp-upgrade-url');
+    if (selectedLocalInstaller) {
+      primaryBtn.disabled = false;
+      primaryBtn.textContent = '⬆ 开始本地安装包升级';
+      primaryBtn.title = '已选定本地安装包，点击开始零注册表无痕升级';
+      localBtn.textContent = '📁 更换本地安装包 (.exe / .zip)';
+      urlInput.value = '[已选本地安装包] ' + selectedLocalInstaller;
+    } else {
+      primaryBtn.disabled = !remoteHasUpdate;
+      primaryBtn.textContent = '⬆ 一键在线无痕升级';
+      primaryBtn.title = remoteHasUpdate
+        ? '检测到官方 Win 新版，点击执行在线无痕升级'
+        : '仅当检测到线上版本号大于本地版或手动选择本地安装包后激活';
+      localBtn.textContent = '📁 选择本地安装包 (.exe / .zip)';
+      urlInput.value = remoteDownloadUrl || '';
+    }
+  }
+
+  function post(action, payload = {}) {
+    if (window.ipc) {
+      window.ipc.postMessage(JSON.stringify({ action, payload }));
+    }
+  }
+
+  function escapeHtml(str) {
+    return String(str ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // 无边框顶部拖动（排除可交互控件）
+  document.getElementById('titlebar').addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    if (e.target.closest('button, input, label, select, .tab-pill')) return;
+    post('drag_window');
+  });
+
+  function switchTab(target) {
+    document.querySelectorAll('.tab-pill').forEach((b) => b.classList.toggle('active', b.dataset.tab === target));
+    document.querySelectorAll('.tab-view').forEach((v) => v.classList.toggle('active', v.id === 'tab-' + target));
+
+    if (target === 'upgrade' && !sessionUpdateTriggered) {
+      sessionUpdateTriggered = true;
+      document.getElementById('upg-remote-ver').textContent = '检测中...';
+      document.getElementById('upg-state-lbl').textContent = '正在联网检测...';
+      document.getElementById('upg-state-lbl').style.color = 'var(--text-dark)';
+      post('check_update');
+    } else if (target === 'tools' && !sessionToolsRemoteTriggered) {
+      sessionToolsRemoteTriggered = true;
+      post('refresh_components', { fetch_remote: true });
+    }
+  }
+
+  document.querySelectorAll('.tab-pill').forEach((btn) => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+
+  // 窗口按钮
+  document.getElementById('btn-to-tray').onclick = () => post('minimize_to_tray');
+  document.getElementById('btn-quit').onclick = () => post('quit_app');
+
+  // Tab 1 主工作台操作
+  document.getElementById('btn-launch-main').onclick = () => post('launch_main');
+  document.getElementById('btn-open-ps').onclick = () => post('open_shell', { powershell: true });
+  document.getElementById('btn-open-cmd').onclick = () => post('open_shell', { powershell: false });
+  document.getElementById('btn-shortcut').onclick = () => post('create_shortcut');
+  document.getElementById('btn-pick-project').onclick = () => post('pick_and_launch_project');
+
+  document.getElementById('chk-auto-clean').onchange = (e) => {
+    post('toggle_setting', { auto_clean_on_exit: e.target.checked });
+  };
+
+  document.getElementById('btn-launch-instance').onclick = () => {
+    const name = document.getElementById('inp-instance-name').value.trim();
+    if (!name) {
+      setStatus('warn', '请输入隔离分身名称（仅字母、数字、- 或 _）');
+      document.getElementById('inp-instance-name').focus();
+      return;
+    }
+    const share_ext = document.getElementById('chk-share-ext').checked;
+    post('launch_instance', { name, share_ext });
+  };
+
+  // Tab 2 清理与打包
+  document.getElementById('btn-refresh-clean').onclick = () => post('init_state');
+  document.getElementById('chk-smart-clean').onchange = (e) => {
+    post('toggle_setting', { smart_clean: e.target.checked });
+  };
+  document.getElementById('btn-clean-daily').onclick = () => {
+    post('run_clean_mode', { mode: 'daily', include_sanitize: false });
+  };
+
+  const packModal = document.getElementById('modal-pack-clean');
+  document.getElementById('btn-clean-pack').onclick = () => {
+    document.getElementById('modal-pack-size').textContent = '预计可释 ' + cachedPackFmt;
+    document.getElementById('chk-pack-sanitize').checked = false;
+    packModal.classList.add('open');
+  };
+  document.getElementById('btn-cancel-pack').onclick = () => packModal.classList.remove('open');
+  document.getElementById('btn-confirm-pack').onclick = () => {
+    const includeSanitize = document.getElementById('chk-pack-sanitize').checked;
+    packModal.classList.remove('open');
+    post('run_clean_mode', { mode: 'pack', include_sanitize: includeSanitize });
+  };
+
+  // Tab 3 Win 检测升级（默认禁用主按钮，仅在线新版或选定本地包后激活）
+  document.getElementById('btn-upgrade-online').onclick = () => {
+    if (!selectedLocalInstaller && !remoteHasUpdate) return;
+    document.getElementById('btn-upgrade-online').disabled = true;
+    post('run_upgrade', { source: selectedLocalInstaller || null });
+  };
+  document.getElementById('btn-upgrade-local').onclick = () => post('pick_local_installer');
+  document.getElementById('btn-upgrade-rollback').onclick = () => post('rollback_upgrade');
+
+  // Tab 4 组件管理
+  document.getElementById('btn-refresh-components').onclick = () => {
+    sessionToolsRemoteTriggered = true;
+    post('refresh_components', { fetch_remote: true });
+  };
+  document.querySelectorAll('.btn-preset').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      post('install_preset', { preset: btn.dataset.preset });
+    });
+  });
+  window.compAction = (op, name) => post('component_action', { op, name });
+
+  const customModal = document.getElementById('modal-custom-tool');
+  document.getElementById('btn-open-add-custom').onclick = () => customModal.classList.add('open');
+  document.getElementById('btn-cancel-custom').onclick = () => customModal.classList.remove('open');
+  document.getElementById('btn-submit-custom').onclick = () => {
+    const name = document.getElementById('inp-custom-name').value.trim();
+    const url = document.getElementById('inp-custom-url').value.trim();
+    const desc = document.getElementById('inp-custom-desc').value.trim();
+    if (!name || !url) {
+      setStatus('warn', '请填写自定义组件名称与官方下载直链');
+      return;
+    }
+    customModal.classList.remove('open');
+    document.getElementById('inp-custom-name').value = '';
+    document.getElementById('inp-custom-url').value = '';
+    document.getElementById('inp-custom-desc').value = '';
+    post('add_custom_component', { name, url, desc });
+  };
+
+  const doctorModal = document.getElementById('modal-doctor');
+  document.getElementById('btn-open-doctor').onclick = () => {
+    doctorModal.classList.add('open');
+    post('refresh_doctor');
+  };
+  document.getElementById('btn-close-doctor').onclick = () => doctorModal.classList.remove('open');
+
+  function setStatus(level, text) {
+    const dot = document.getElementById('status-dot');
+    dot.className = 'status-dot' + (level && level !== 'ok' ? ' ' + level : '');
+    document.getElementById('status-text').textContent = text;
+  }
+
+  function appendLog(boxId, line) {
+    const el = document.getElementById(boxId);
+    if (!el) return;
+    el.textContent += (el.textContent ? '\n' : '') + line;
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function renderBreakdown(items) {
+    const tbody = document.getElementById('clean-breakdown-body');
+    tbody.innerHTML = '';
+    if (!items || items.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="desc-xs" style="text-align: center; padding: 18px;">✨ 当前非常干净，未发现待清理的垃圾或缓存目录</td></tr>';
+      return;
+    }
+    items.forEach((it) => {
+      const tr = document.createElement('tr');
+      const isPack = it.category === '打包';
+      tr.innerHTML = `
+        <td style="font-weight: 600;">${escapeHtml(it.label)}</td>
+        <td><span class="card-badge ${isPack ? 'badge-warn' : 'badge-info'}">${escapeHtml(it.category)}</span></td>
+        <td class="mono-xs">${escapeHtml(it.rel_path)}</td>
+        <td style="text-align: right;" class="mono-xs">${it.file_count}</td>
+        <td style="text-align: right; font-weight: 700;">${escapeHtml(it.size_fmt)}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function renderComponents(list) {
+    const tbody = document.getElementById('comp-table-body');
+    tbody.innerHTML = '';
+    if (!list || list.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="desc-xs" style="text-align: center;">暂无纳管组件</td></tr>';
+      return;
+    }
+
+    let installedCount = 0;
+    let updatableCount = 0;
+
+    list.forEach((c) => {
+      if (c.installed) installedCount++;
+      if (c.update_state === 'updatable') updatableCount++;
+
+      const installBadge = c.installed
+        ? '<span class="card-badge badge-ok">已安装</span>'
+        : '<span class="card-badge">未安装</span>';
+
+      const stateMeta = {
+        up_to_date: ['badge-ok', '已是最新'],
+        updatable: ['badge-warn', '可升级'],
+        installed_unknown: ['badge-info', '已安装'],
+        custom: ['badge-info', '自定义已装'],
+      }[c.update_state] || ['', '待安装'];
+
+      const tr = document.createElement('tr');
+      const tdName = document.createElement('td');
+      const nameDiv = document.createElement('div');
+      nameDiv.style.fontWeight = '700';
+      nameDiv.style.color = 'var(--text-dark)';
+      nameDiv.textContent = c.display_name;
+      const descDiv = document.createElement('div');
+      descDiv.className = 'desc-xs';
+      descDiv.style.fontSize = '10.5px';
+      descDiv.textContent = c.summary;
+      tdName.appendChild(nameDiv);
+      tdName.appendChild(descDiv);
+
+      const tdInstalled = document.createElement('td');
+      tdInstalled.innerHTML = installBadge;
+
+      const tdLocal = document.createElement('td');
+      tdLocal.className = 'mono-xs';
+      tdLocal.textContent = c.local_version || '--';
+
+      const tdRemote = document.createElement('td');
+      tdRemote.className = 'mono-xs';
+      tdRemote.textContent = c.remote_version || '待检测';
+
+      const tdState = document.createElement('td');
+      const sb = document.createElement('span');
+      sb.className = ('card-badge ' + stateMeta[0]).trim();
+      sb.textContent = stateMeta[1];
+      tdState.appendChild(sb);
+
+      const tdAct = document.createElement('td');
+      tdAct.style.textAlign = 'right';
+      tdAct.style.whiteSpace = 'nowrap';
+
+      if (!c.installed) {
+        const b = document.createElement('button');
+        b.className = 'btn btn-primary btn-xs';
+        b.textContent = '安装';
+        b.onclick = () => compAction('install', c.id);
+        tdAct.appendChild(b);
+      } else {
+        const bMain = document.createElement('button');
+        const isUpdatable = c.update_state === 'updatable';
+        bMain.className = isUpdatable ? 'btn btn-accent btn-xs' : 'btn btn-xs';
+        bMain.textContent = isUpdatable ? '升级' : '重装';
+        bMain.onclick = () => compAction(isUpdatable ? 'upgrade' : 'install', c.id);
+        const bDel = document.createElement('button');
+        bDel.className = 'btn btn-danger-ghost btn-xs';
+        bDel.style.marginLeft = '4px';
+        bDel.textContent = '卸载';
+        bDel.onclick = () => compAction('uninstall', c.id);
+        tdAct.appendChild(bMain);
+        tdAct.appendChild(bDel);
+      }
+
+      tr.appendChild(tdName);
+      tr.appendChild(tdInstalled);
+      tr.appendChild(tdLocal);
+      tr.appendChild(tdRemote);
+      tr.appendChild(tdState);
+      tr.appendChild(tdAct);
+      tbody.appendChild(tr);
+    });
+
+    const summaryBadge = document.getElementById('badge-tools-ready');
+    summaryBadge.textContent = updatableCount > 0
+      ? `已装 ${installedCount}/${list.length} · ${updatableCount} 项可升级`
+      : `已装 ${installedCount}/${list.length} · 全绿零软链接`;
+    summaryBadge.className = 'card-badge ' + (updatableCount > 0 ? 'badge-warn' : 'badge-ok');
+  }
+
+  function renderState(s) {
+    const ideVerSuffix = s.ide_version ? ` · IDE v${s.ide_version}` : '';
+    document.getElementById('status-right').textContent = `AideRun v${s.aiderun_version}${ideVerSuffix} · 右键托盘多开`;
+    document.getElementById('lbl-root-dir').textContent = s.root_dir;
+
+    const ideBadge = document.getElementById('badge-ide-ver');
+    if (!s.ide_installed) {
+      ideBadge.textContent = '未检测到主程序';
+      ideBadge.className = 'card-badge badge-err';
+    } else if (s.ide_needs_unpack) {
+      ideBadge.textContent = '待自动解包安装包';
+      ideBadge.className = 'card-badge badge-warn';
+    } else {
+      ideBadge.textContent = 'IDE v' + (s.ide_version || '?');
+      ideBadge.className = 'card-badge badge-ok';
+    }
+    document.getElementById('upg-local-ver').textContent = s.ide_version || '未知';
+
+    document.getElementById('kv-skeleton').textContent = s.needs_bootstrap ? '待首次部署 (启动自动完成)' : '完整隔离就绪';
+    document.getElementById('kv-proxy').textContent = s.proxy_text;
+    document.getElementById('kv-fs').textContent = s.ntfs ? 'NTFS (便携高速隔离)' : '非 NTFS (零软链接纯绿)';
+    document.getElementById('kv-procs').textContent = s.active_procs.length
+      ? `${s.active_procs.length} 个运行中 (${s.active_procs.slice(0,2).map(p => p.name).join(', ')})`
+      : '0 个（空闲安全）';
+
+    document.getElementById('chk-auto-clean').checked = !!s.auto_clean_on_exit;
+    document.getElementById('chk-smart-clean').checked = !!s.smart_clean;
+
+    // 渲染项目列表
+    const projBox = document.getElementById('project-list');
+    projBox.innerHTML = '';
+    if (!s.projects || s.projects.length === 0) {
+      projBox.innerHTML = '<div class="desc-xs">projects/ 暂无子文件夹，可点击右上角打开任意目录。</div>';
+    } else {
+      s.projects.forEach((p) => {
+        const row = document.createElement('div');
+        row.className = 'proj-item';
+        const span = document.createElement('span');
+        span.className = 'proj-name';
+        span.textContent = '📁 ' + p.name;
+        span.title = p.path;
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-sm';
+        btn.textContent = '多开窗口';
+        btn.onclick = () => post('launch_project', { path: p.path, new_window: true });
+        row.appendChild(span);
+        row.appendChild(btn);
+        projBox.appendChild(row);
+      });
+    }
+
+    // 渲染隔离分身筹码
+    const chipWrap = document.getElementById('instance-chips');
+    chipWrap.innerHTML = '';
+    if (!s.instances || s.instances.length === 0) {
+      chipWrap.innerHTML = '<span class="desc-xs">暂无历史隔离分身，输入名称即可秒建。</span>';
+    } else {
+      s.instances.forEach((name) => {
+        const c = document.createElement('button');
+        c.className = 'chip';
+        c.textContent = '💠 ' + name;
+        c.title = '使用独立分身启动';
+        c.onclick = () => post('launch_instance', {
+          name,
+          share_ext: document.getElementById('chk-share-ext').checked
+        });
+        chipWrap.appendChild(c);
+      });
+    }
+
+    // Tab 2 垃圾组成与状态
+    cachedPackFmt = s.pack_clean_fmt || '--';
+    document.getElementById('lbl-data-total').textContent = s.data_total_fmt;
+    document.getElementById('badge-daily-total').textContent = '日常可释: ' + (s.daily_clean_fmt || '--');
+    document.getElementById('badge-pack-total').textContent = '打包总可释: ' + cachedPackFmt;
+    document.getElementById('lbl-clean-lock').textContent = s.active_procs.length > 0
+      ? `⚠ 当前目录有 ${s.active_procs.length} 个 IDE 相关进程运行中，清理前请先关闭 IDE 窗口`
+      : '✅ 当前无 IDE 进程占用，可随时执行日常清理或打包彻底清理';
+    renderBreakdown(s.junk_breakdown);
+
+    const unpBadge = document.getElementById('badge-unpacker');
+    unpBadge.textContent = s.innounp_ready ? 'innounp-2 已就绪' : '升级时自动获取 innounp-2';
+    unpBadge.className = 'card-badge ' + (s.innounp_ready ? 'badge-ok' : 'badge-warn');
+
+    if (s.components) {
+      renderComponents(s.components);
+    }
+  }
+
+  // Native 回调总线
+  window.__onAideEvent = function (evt) {
+    if (!evt || !evt.kind) return;
+    if (evt.kind === 'state') {
+      renderState(evt.state);
+    } else if (evt.kind === 'status') {
+      setStatus(evt.level, evt.text);
+      if (evt.log_box) appendLog(evt.log_box, evt.text);
+    } else if (evt.kind === 'switch_tab') {
+      switchTab(evt.tab);
+    } else if (evt.kind === 'components_data') {
+      renderComponents(evt.components);
+    } else if (evt.kind === 'local_installer_picked') {
+      selectedLocalInstaller = evt.path || null;
+      if (selectedLocalInstaller) {
+        const lbl = document.getElementById('upg-state-lbl');
+        lbl.textContent = '📦 已选定本地安装包（待升级）';
+        lbl.style.color = '#1d4ed8';
+        appendLog('upg-log-box', `[本地安装包] 已选定: ${selectedLocalInstaller}，请点击「开始本地安装包升级」`);
+      }
+      syncUpgradeButtonState();
+    } else if (evt.kind === 'upgrade_done') {
+      if (evt.ok && !evt.cancelled) {
+        selectedLocalInstaller = null;
+      }
+      syncUpgradeButtonState();
+    } else if (evt.kind === 'update_result') {
+      if (evt.ok) {
+        const d = evt.data;
+        remoteHasUpdate = !!d.has_update;
+        remoteDownloadUrl = d.download_url || '';
+        document.getElementById('upg-local-ver').textContent = d.local_ver || '未安装';
+        document.getElementById('upg-remote-ver').textContent = d.remote_ver || '未知';
+        if (!selectedLocalInstaller) {
+          const lbl = document.getElementById('upg-state-lbl');
+          lbl.textContent = remoteHasUpdate ? '🔥 发现 Win 新版本！' : '✅ 已是最新稳定版';
+          lbl.style.color = remoteHasUpdate ? '#b45309' : '#0b5e42';
+        }
+        syncUpgradeButtonState();
+        appendLog('upg-log-box', `[检测成功] 来源: ${d.source_label} | Win最新: ${d.remote_ver} | 可升级: ${remoteHasUpdate ? '是' : '否'}`);
+        setStatus(remoteHasUpdate ? 'warn' : 'ok', remoteHasUpdate ? `发现 Antigravity IDE Win 新版 ${d.remote_ver}` : '当前已是 Win 最新稳定版');
+      } else {
+        remoteHasUpdate = false;
+        document.getElementById('upg-remote-ver').textContent = '检测失败';
+        if (!selectedLocalInstaller) {
+          const lbl = document.getElementById('upg-state-lbl');
+          lbl.textContent = '检测失败';
+          lbl.style.color = '#991b1b';
+        }
+        syncUpgradeButtonState();
+        appendLog('upg-log-box', `[检测失败] ${evt.error}`);
+        setStatus('err', evt.error);
+      }
+    } else if (evt.kind === 'doctor_report') {
+      document.getElementById('doctor-log-box').textContent = evt.report;
+    }
+  };
+
+  window.addEventListener('DOMContentLoaded', () => {
+    post('init_state');
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+# AideRun - Cargo 编译配置，将编译产物隔离至 data/cache/cargo-target 并启用静态 CRT
+[build]
+target-dir = "../../data/cache/cargo-target"
+
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]
+
