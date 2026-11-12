@@ -21,6 +21,7 @@
 
 <h3>
   <a href="#️-使用说明">快速开始</a> · 
+  <a href="#-界面实景预览">界面预览</a> · 
   <a href="#-核心功能一览">核心特性</a> · 
   <a href="#-目录结构与源码编译">源码编译</a> · 
   <a href="#-更新日志">更新日志</a> · 
@@ -32,6 +33,40 @@
 </div>
 
 > 💡 **最新版直链下载**：[Release/AideRun.exe](https://raw.githubusercontent.com/ZhangSir9901/AideRun/main/Release/AideRun.exe)（单文件静态编译成品，放入目标目录双击即可自动部署全套便携开发环境）
+
+---
+
+## 📸 界面实景预览
+
+<div align="center">
+  <p><b>水 晶 玻 璃 拟 态 主 控 制 台（1120 × 700）</b></p>
+  <img src="./jpg/主界面.jpg" width="88%" alt="AideRun 主界面预览" />
+</div>
+
+<br>
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="./jpg/启动与多开.jpg" alt="启动与多开" /><br />
+      <sub><b>启动与多开</b>：主工作台状态透视、项目并行多开与独立隔离分身</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="./jpg/清理与打包.jpg" alt="清理与打包" /><br />
+      <sub><b>清理与打包</b>：分目录占用明细、程序智能清理与打包前彻底瘦身脱敏</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="./jpg/检测与升级.jpg" alt="检测与升级" /><br />
+      <sub><b>检测与升级</b>：官方 IDE 零注册表原子升级回滚 &amp; 启动器无感自更新</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="./jpg/全组件管理.jpg" alt="全组件管理" /><br />
+      <sub><b>全组件管理</b>：零软链接绿色组件（uv / MinGit / Node.js / 7zip / innounp-2）一键配齐</sub>
+    </td>
+  </tr>
+</table>
 
 ---
 
