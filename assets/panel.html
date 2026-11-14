@@ -451,7 +451,7 @@
 
       <nav class="nav-tabs" aria-label="功能导航">
         <button class="tab-pill active" data-tab="launch">启动与多开</button>
-        <button class="tab-pill" data-tab="clean">清理与打包</button>
+        <button class="tab-pill" data-tab="clean">垃圾清理</button>
         <button class="tab-pill" data-tab="upgrade">检测与升级</button>
         <button class="tab-pill" data-tab="tools">全组件管理</button>
       </nav>
@@ -538,9 +538,30 @@
         </div>
       </section>
 
-      <!-- Tab 2: 清理与打包（垃圾组成明细 + 双动作 + 程序智能清理） -->
+      <!-- Tab 2: 垃圾清理（三大核心保护资产 + 日常/深度两级智能清理） -->
       <section class="tab-view" id="tab-clean">
-        <div class="glass-card" style="padding: 13px 20px; flex-direction: row; align-items: center; justify-content: space-between;">
+        <!-- 核心资产绝对保护卡片条 -->
+        <div class="glass-card" style="padding: 10px 16px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+            <div style="font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; color: var(--text-dark);">
+              <span>🛡️ 核心资产防护状态</span>
+              <span class="desc-xs" style="font-weight: normal; margin-left: 4px;">（默认安全锁定，严防误删）</span>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; font-size: 12px;">
+              <span style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 8px; background: rgba(34, 197, 94, 0.12); border: 1px solid rgba(34, 197, 94, 0.32); color: #166534; font-weight: 600;">
+                🔒 账号与登录凭证: 受保护
+              </span>
+              <span style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 8px; background: rgba(34, 197, 94, 0.12); border: 1px solid rgba(34, 197, 94, 0.32); color: #166534; font-weight: 600;">
+                🔒 基础开发环境: 绝对锁定
+              </span>
+              <span style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 8px; background: rgba(34, 197, 94, 0.12); border: 1px solid rgba(34, 197, 94, 0.32); color: #166534; font-weight: 600;">
+                🔒 各工程 AI 会话记录: 受保护
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card" style="padding: 12px 20px; flex-direction: row; align-items: center; justify-content: space-between;">
           <div>
             <div class="card-title">data 便携目录总占用：<span id="lbl-data-total">--</span></div>
             <div class="desc-xs" id="lbl-clean-lock">正在检测当前目录进程锁状态...</div>
@@ -558,7 +579,7 @@
             <div class="card-title">当前可清理垃圾组成明细</div>
             <div style="display: flex; gap: 8px; align-items: center;">
               <span class="card-badge badge-info" id="badge-daily-total">日常可释: --</span>
-              <span class="card-badge badge-warn" id="badge-pack-total">打包总可释: --</span>
+              <span class="card-badge badge-warn" id="badge-pack-total">深度总可释: --</span>
             </div>
           </div>
           <div class="scroll-list" id="clean-breakdown-wrap">
@@ -581,11 +602,11 @@
 
         <div class="glass-card" style="padding: 13px 20px; flex-direction: row; align-items: center; justify-content: space-between;">
           <div class="desc-xs" style="max-width: 580px;">
-            完整保留用户设置、<code>settings.json</code>、扩展插件与 <code>projects/</code> 代码；智能保护当前面板运行目录。
+            完整保留用户账号设置、<code>settings.json</code>、扩展插件库与各工程 AI 对话库；智能保护当前运行目录。
           </div>
           <div style="display: flex; gap: 10px;">
-            <button class="btn btn-primary" id="btn-clean-daily">✨ 一键清理日常垃圾（推荐）</button>
-            <button class="btn btn-accent" id="btn-clean-pack">📦 打包之前彻底清理</button>
+            <button class="btn btn-primary" id="btn-clean-daily">✨ 一键日常清理（推荐）</button>
+            <button class="btn btn-accent" id="btn-clean-pack">🧹 深度彻底清理</button>
           </div>
         </div>
       </section>
@@ -695,26 +716,59 @@
 
     </main>
 
-    <!-- 轻量磨砂弹窗 1: 打包之前彻底清理二次确认 -->
+    <!-- 轻量磨砂弹窗 1: 深度彻底清理二次确认 -->
     <div class="modal-mask" id="modal-pack-clean">
       <div class="modal-box">
         <div class="card-hd" style="margin-bottom: 0;">
-          <div class="card-title">📦 打包之前彻底清理确认</div>
+          <div class="card-title">🧹 深度彻底清理确认</div>
           <span class="card-badge badge-warn" id="modal-pack-size">--</span>
         </div>
         <div class="desc-xs" style="color: var(--text-dark);">
-          将全面清理日常运行垃圾及开发包下载/编译缓存（<code>pip / uv / npm / Go / Cargo</code>），为您最大程度压缩分发包体积；同时完整保留 <code>projects/</code> 源码与扩展。
+          将深度清理日常运行垃圾、IDE 升级历史备份、各语言编译依赖缓存（<code>Rust / NuGet / Pip / Npm / Go</code>）以及 AI 智能体暂存工程包与长日志；<strong>默认严格保护用户账号与各工程 AI 对话记录</strong>。
         </div>
-        <label style="display: flex; align-items: flex-start; gap: 10px; padding: 11px 13px; border-radius: 12px; background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.34); cursor: pointer; font-size: 13px; line-height: 1.5;">
-          <input type="checkbox" id="chk-pack-sanitize" style="margin-top: 3px;" />
-          <span>
-            <strong>同时清除个人登录态与对话历史（隐私脱敏）</strong><br />
-            <span class="desc-xs">若打包分享给同事/他人请勾选（清理 Google 登录与对话记录，保留简体中文及免权限白名单）；仅给自己备份清理请勿勾选。</span>
-          </span>
-        </label>
+
+        <div style="padding: 10px 14px; border-radius: 12px; background: rgba(34, 197, 94, 0.12); border: 1px solid rgba(34, 197, 94, 0.28); font-size: 12.5px; color: #166534; line-height: 1.5;">
+          <strong>🛡️ 核心资产默认受保护</strong>：基础开发环境绝对锁定，账号与各工程 AI 对话库默认保留。
+        </div>
+
+        <!-- 高危选项（默认不勾选） -->
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 2px;">
+          <label style="display: flex; align-items: flex-start; gap: 9px; padding: 10px 12px; border-radius: 10px; background: rgba(245, 158, 11, 0.10); border: 1px solid rgba(245, 158, 11, 0.28); cursor: pointer; font-size: 12.5px; line-height: 1.45;">
+            <input type="checkbox" id="chk-pack-sanitize" style="margin-top: 3px;" />
+            <span>
+              <strong>重置账号登录态（脱敏清理）</strong><br />
+              <span class="desc-xs">将清空 Google / GitHub 账号登录凭据与身份 Token，下次打开需重新登录；日常自用请勿勾选。</span>
+            </span>
+          </label>
+
+          <label style="display: flex; align-items: flex-start; gap: 9px; padding: 10px 12px; border-radius: 10px; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.28); cursor: pointer; font-size: 12.5px; line-height: 1.45;">
+            <input type="checkbox" id="chk-clean-ai-conv" style="margin-top: 3px;" />
+            <span>
+              <strong style="color: #b91c1c;">清空各工程 AI 历史对话记录</strong><br />
+              <span class="desc-xs">将永久清空所有工程的历史 AI 聊天记录数据库且不可恢复；日常自用强烈建议保留。</span>
+            </span>
+          </label>
+        </div>
+
         <div style="display: flex; justify-content: flex-end; gap: 10px;">
           <button class="btn btn-sm" id="btn-cancel-pack">取消</button>
-          <button class="btn btn-accent btn-sm" id="btn-confirm-pack">确认执行彻底清理</button>
+          <button class="btn btn-accent btn-sm" id="btn-confirm-pack">确认执行深度清理</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 高危选项二次确认强提醒弹窗 -->
+    <div class="modal-mask" id="modal-danger-confirm">
+      <div class="modal-box" style="max-width: 480px; border-color: rgba(239, 68, 68, 0.45); box-shadow: 0 16px 40px rgba(239, 68, 68, 0.18);">
+        <div class="card-hd" style="margin-bottom: 0;">
+          <div class="card-title" style="color: #b91c1c;">⚠️ 高危清理二次强提醒</div>
+        </div>
+        <div class="desc-xs" id="danger-confirm-msg" style="color: var(--text-dark); line-height: 1.6; font-size: 13px;">
+          您勾选了核心受保护项目，此操作不可撤销！
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
+          <button class="btn btn-sm" id="btn-cancel-danger">返回重新选择</button>
+          <button class="btn btn-warn btn-sm" id="btn-proceed-danger" style="background: rgba(239, 68, 68, 0.88); color: #fff;">我已知晓风险，强制执行</button>
         </div>
       </div>
     </div>
@@ -775,7 +829,7 @@
       </div>
       <div class="status-right-wrap">
         <button class="btn-self-update-pill" id="btn-self-update-pill" title="检测到 GitHub 新版本，点击立即执行无感影子热替换并自动重启"></button>
-        <div style="font-size: 12.5px; font-weight: 600; color: var(--text-muted); white-space: nowrap;" id="status-right">AideRun v1.3.3 · 右键托盘多开</div>
+        <div style="font-size: 12.5px; font-weight: 600; color: var(--text-muted); white-space: nowrap;" id="status-right">AideRun v1.3.4 · 右键托盘多开</div>
         <button class="icon-link-btn" id="btn-open-github" title="访问 GitHub 开源仓库 (ZhangSir9901/AideRun)" aria-label="访问 GitHub 开源仓库">
           <svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
             <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
@@ -853,12 +907,15 @@
     document.querySelectorAll('.tab-pill').forEach((b) => b.classList.toggle('active', b.dataset.tab === target));
     document.querySelectorAll('.tab-view').forEach((v) => v.classList.toggle('active', v.id === 'tab-' + target));
 
-    if (target === 'upgrade' && !sessionUpdateTriggered) {
-      sessionUpdateTriggered = true;
-      document.getElementById('upg-remote-ver').textContent = '检测中...';
-      document.getElementById('upg-state-lbl').textContent = '正在联网检测...';
-      document.getElementById('upg-state-lbl').style.color = 'var(--text-dark)';
-      post('check_update');
+    if (target === 'upgrade') {
+      if (!sessionUpdateTriggered) {
+        sessionUpdateTriggered = true;
+        document.getElementById('upg-remote-ver').textContent = '检测中...';
+        document.getElementById('upg-state-lbl').textContent = '正在联网检测...';
+        document.getElementById('upg-state-lbl').style.color = 'var(--text-dark)';
+        post('check_update');
+      }
+      post('check_self_update', { force: false });
     } else if (target === 'tools' && !sessionToolsRemoteTriggered) {
       sessionToolsRemoteTriggered = true;
       post('refresh_components', { fetch_remote: true });
@@ -891,27 +948,63 @@
     post('launch_instance', { name, share_ext });
   };
 
-  // Tab 2 清理与打包
+  // Tab 2 垃圾清理与二次强提醒控制
   document.getElementById('btn-refresh-clean').onclick = () => post('init_state');
   document.getElementById('chk-smart-clean').onchange = (e) => {
     post('toggle_setting', { smart_clean: e.target.checked });
   };
   document.getElementById('btn-clean-daily').onclick = () => {
-    post('run_clean_mode', { mode: 'daily', include_sanitize: false });
+    post('run_clean_mode', { mode: 'daily', include_sanitize: false, clean_ai_conversations: false });
   };
 
   const packModal = document.getElementById('modal-pack-clean');
+  const dangerModal = document.getElementById('modal-danger-confirm');
+
   document.getElementById('btn-clean-pack').onclick = () => {
-    document.getElementById('modal-pack-size').textContent = '预计可释 ' + cachedPackFmt;
+    document.getElementById('modal-pack-size').textContent = '深度可释 ' + cachedPackFmt;
     document.getElementById('chk-pack-sanitize').checked = false;
+    document.getElementById('chk-clean-ai-conv').checked = false;
     packModal.classList.add('open');
   };
   document.getElementById('btn-cancel-pack').onclick = () => packModal.classList.remove('open');
+
+  function doExecuteDeepClean() {
+    const includeSanitize = document.getElementById('chk-pack-sanitize').checked;
+    const cleanAiConv = document.getElementById('chk-clean-ai-conv').checked;
+    packModal.classList.remove('open');
+    dangerModal.classList.remove('open');
+    post('run_clean_mode', {
+      mode: 'deep',
+      include_sanitize: includeSanitize,
+      clean_ai_conversations: cleanAiConv
+    });
+  }
+
   document.getElementById('btn-confirm-pack').onclick = () => {
     const includeSanitize = document.getElementById('chk-pack-sanitize').checked;
-    packModal.classList.remove('open');
-    post('run_clean_mode', { mode: 'pack', include_sanitize: includeSanitize });
+    const cleanAiConv = document.getElementById('chk-clean-ai-conv').checked;
+
+    if (includeSanitize || cleanAiConv) {
+      let warnings = [];
+      if (includeSanitize) {
+        warnings.push('• <strong>重置账号登录态</strong>：将注销所有账号登录凭证并清空身份 Token。');
+      }
+      if (cleanAiConv) {
+        warnings.push('• <strong style="color:#b91c1c;">清空各工程 AI 会话记录</strong>：所有历史对话数据库将永久清除且不可恢复！');
+      }
+      document.getElementById('danger-confirm-msg').innerHTML =
+        '您在深度清理中勾选了以下受保护资产：<br><br>' +
+        warnings.join('<br>') +
+        '<br><br>是否确认强制执行深度清除？';
+      dangerModal.classList.add('open');
+      return;
+    }
+
+    doExecuteDeepClean();
   };
+
+  document.getElementById('btn-cancel-danger').onclick = () => dangerModal.classList.remove('open');
+  document.getElementById('btn-proceed-danger').onclick = () => doExecuteDeepClean();
 
   // Tab 3 检测与升级（默认禁用主按钮，仅在线新版或选定本地包后激活）
   document.getElementById('btn-upgrade-online').onclick = () => {
@@ -1290,6 +1383,9 @@
 
   window.addEventListener('DOMContentLoaded', () => {
     post('init_state');
+    setTimeout(() => {
+      post('check_self_update', { force: false });
+    }, 1200);
   });
 </script>
 </body>

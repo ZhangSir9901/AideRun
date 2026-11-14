@@ -11,7 +11,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/github/stars/ZhangSir9901/AideRun?style=flat-square&color=3498db&logo=github" alt="stars">
-  <img src="https://img.shields.io/badge/version-v1.3.3-1abc9c?style=flat-square" alt="version">
+  <img src="https://img.shields.io/badge/version-v1.3.4-1abc9c?style=flat-square" alt="version">
   <img src="https://img.shields.io/github/issues/ZhangSir9901/AideRun?style=flat-square&color=f1c40f" alt="issues">
   <img src="https://img.shields.io/badge/arch-x86__64-lightgrey?style=flat-square" alt="arch">
   <img src="https://img.shields.io/badge/OS-Win10_11-success?style=flat-square" alt="os">
@@ -88,8 +88,8 @@
 *   **工业级美学 UI**：基于 **Rust + tao + wry (WebView2)** 原生渲染 `1120 × 700` 无边框透明窗口（主界面与前置子窗口统一尺度），搭载 50ms 驱动 HSL 360° 呼吸流光引擎（步长 `0.35°`、S `0.52`、L `0.85`），主窗口与各个子窗口顶部标题栏及右下角均内置 GitHub 仓库一键直达按钮。
 *   **工作区隔离多开**：一键系统托盘常驻、按项目文件夹独立多开、或通过 `--instance <名称>` 创建完全隔离的数据分身，并内置便携 PowerShell / CMD 终端启动器。
 
-### 🧹 5. 智能清理、脱敏与内核升级护盾
-*   **分级瘦身与进程保护**：智能识别 IDE 锁占用，提供一键日常清理与打包前彻底瘦身（支持保留配置仅清除缓存，或一键 SQLite 隐私脱敏分享给他人）。
+### 🧹 5. 垃圾清理、核心资产防护与内核升级护盾
+*   **分级瘦身与核心资产死锁防护**：智能识别 IDE 进程锁占用，严格保护**用户账号凭证**、**基础开发环境**与**各工程 AI 对话库**三大核心资产；提供「一键日常清理」（秒清日志/浏览器运行缓存）与「深度彻底清理」（自动清理跨版本升级备份、各语言编译依赖缓存、AI 暂存工程包与长日志，按需二次强提醒脱敏）。
 *   **IDE 内核零注册表升级 & 回滚**：一键从官方通道升级 Antigravity IDE 本体，自动保护 `data/`、`projects/`、`tools/` 与 `config.json` 并保留可秒级回滚快照。
 
 ---

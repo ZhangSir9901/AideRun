@@ -22,9 +22,9 @@ const SMART_CLEAN_INTERVAL_SECS: i64 = 6 * 3600;
 pub enum CleanLevel {
     /// 轻量：临时文件、运行日志、崩溃转储、代理日志
     Light,
-    /// 日常推荐：含 Chromium/VSCode Web 缓存、Code Cache、GPU/Dawn 缓存、Crashpad 等
+    /// 一键日常清理：含 Chromium/VSCode Web 缓存、Code Cache、GPU/Dawn 缓存、Crashpad 等
     Deep,
-    /// 打包前彻底清理：含日常垃圾与 pip/npm/uv/go/cargo 下载与编译缓存
+    /// 深度彻底清理：含日常垃圾与 pip/npm/uv/go/cargo/nuget 依赖与 AI 暂存工程
     All,
 }
 
@@ -32,18 +32,19 @@ impl CleanLevel {
     pub fn label(&self) -> &'static str {
         match self {
             CleanLevel::Light => "轻量清理 (Temp/Logs/CrashDumps/ProxyLog)",
-            CleanLevel::Deep => "一键清理日常垃圾 (Temp/Logs 与 IDE 运行缓存)",
-            CleanLevel::All => "打包前彻底清理 (含日常垃圾与 pip/npm/uv/Go/Cargo 缓存)",
+            CleanLevel::Deep => "一键日常清理 (Temp/Logs 与 IDE 运行缓存)",
+            CleanLevel::All => "深度彻底清理 (升级备份、编译依赖缓存与 AI 暂存工程包)",
         }
     }
 }
 
-/// 垃圾项归类（日常清理 vs 打包专清）
+/// 垃圾项归类（日常清理 vs 深度专清）
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum CleanCategory {
     Daily,
-    PackOnly,
+    #[serde(rename = "deep")]
+    DeepOnly,
 }
 
 /// 单个待清理条目的扫描结果
@@ -107,6 +108,102 @@ fn push_user_data_cache_specs(
             CleanCategory::Daily,
         ));
     }
+}
+
+/// 扫描 AI 助手各会话中的临时中间产物（暂存工程与测试包）与长日志（严格保护 conversations/*.db 对话记录）
+fn push_ai_scratch_and_log_specs(
+    specs: &mut Vec<(String, PathBuf, bool, CleanCategory)>,
+    gemini_dir: &Path,
+) {
+    if !gemini_dir.is_dir() {
+        return;
+    }
+    let Ok(entries) = std::fs::read_dir(gemini_dir) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let sub = entry.path();
+        if !sub.is_dir() {
+            continue;
+        }
+        let brain_dir = sub.join("brain");
+        if !brain_dir.is_dir() {
+            continue;
+        }
+        let Ok(brain_entries) = std::fs::read_dir(&brain_dir) else {
+            continue;
+        };
+        for b_entry in brain_entries.flatten() {
+            let b_path = b_entry.path();
+            if !b_path.is_dir() {
+                continue;
+            }
+            let scratch = b_path.join("scratch");
+            if scratch.is_dir() {
+                let id_prefix = b_path
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .map(|s| &s[..s.len().min(8)])
+                    .unwrap_or("conv");
+                specs.push((
+                    format!("AI 暂存工程与测试包 ({id_prefix}/scratch)"),
+                    scratch,
+                    false,
+                    CleanCategory::DeepOnly,
+                ));
+            }
+            let sys_gen_logs = b_path.join(".system_generated").join("logs");
+            if sys_gen_logs.is_dir() {
+                let id_prefix = b_path
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .map(|s| &s[..s.len().min(8)])
+                    .unwrap_or("conv");
+                specs.push((
+                    format!("AI 会话详细调试日志 ({id_prefix}/logs)"),
+                    sys_gen_logs,
+                    false,
+                    CleanCategory::DeepOnly,
+                ));
+            }
+        }
+    }
+}
+
+/// 核心资产绝对安全白名单校验（账号凭据、基础开发环境工具链、各工程 AI 对话库一票否决绝不可误删）
+pub fn is_critical_protected_path(path: &Path, paths: &PortablePaths) -> bool {
+    // 1. 账号与关键配置
+    if path == paths.settings_json
+        || path == paths.argv_json
+        || path == paths.launcher_config
+        || path == paths.proxy_config
+    {
+        return true;
+    }
+    if path.starts_with(paths.user_data_dir.join("User").join("globalStorage")) {
+        return true;
+    }
+    // 2. 基础开发环境底座
+    if path == paths.ide_exe
+        || path == paths.root
+        || path == paths.projects_dir
+        || path == paths.tools_dir
+        || path == paths.resources_dir
+        || path == paths.bin_dir
+    {
+        return true;
+    }
+    if path.starts_with(&paths.rustup_home) || path.starts_with(&paths.extensions_dir) {
+        return true;
+    }
+    // 3. 各工程 AI 对话数据库（conversations 目录及其内部 *.db 绝对死锁保留）
+    let path_str = path.to_string_lossy().to_ascii_lowercase();
+    if (path_str.contains(".gemini") || path_str.contains("antigravity"))
+        && path_str.contains("conversations")
+    {
+        return true;
+    }
+    false
 }
 
 /// 收集指定清理级别下的所有目标及其占用空间（CLI 兼容默认包含 WebView2 目录）
@@ -200,70 +297,83 @@ pub fn scan_clean_targets_with_opts(
     }
 
     if level == CleanLevel::All {
-        specs.push(("Pip 下载缓存 (cache/pip)".into(), paths.pip_cache_dir.clone(), true, CleanCategory::PackOnly));
-        specs.push(("Npm 缓存 (cache/npm)".into(), paths.npm_cache_dir.clone(), true, CleanCategory::PackOnly));
-        specs.push(("UV 包缓存 (cache/uv)".into(), paths.uv_cache_dir.clone(), true, CleanCategory::PackOnly));
-        specs.push(("Go 编译缓存 (cache/go-build)".into(), paths.go_cache_dir.clone(), true, CleanCategory::PackOnly));
+        specs.push(("Pip 下载缓存 (cache/pip)".into(), paths.pip_cache_dir.clone(), true, CleanCategory::DeepOnly));
+        specs.push(("Npm 缓存 (cache/npm)".into(), paths.npm_cache_dir.clone(), true, CleanCategory::DeepOnly));
+        specs.push(("UV 包缓存 (cache/uv)".into(), paths.uv_cache_dir.clone(), true, CleanCategory::DeepOnly));
+        specs.push(("Go 编译缓存 (cache/go-build)".into(), paths.go_cache_dir.clone(), true, CleanCategory::DeepOnly));
         specs.push((
             "Go 模块缓存 (cache/go-mod)".into(),
             paths.cache_dir.join("go-mod"),
             false,
-            CleanCategory::PackOnly,
+            CleanCategory::DeepOnly,
         ));
         specs.push((
             "XDG 缓存 (cache/xdg)".into(),
             paths.cache_dir.join("xdg"),
             false,
-            CleanCategory::PackOnly,
+            CleanCategory::DeepOnly,
         ));
         specs.push((
             "Rust 编译产物缓存 (cache/cargo-target)".into(),
             paths.cache_dir.join("cargo-target"),
             false,
-            CleanCategory::PackOnly,
+            CleanCategory::DeepOnly,
         ));
         specs.push((
             "Cargo Registry 下载缓存".into(),
             paths.cargo_home.join("registry").join("cache"),
             false,
-            CleanCategory::PackOnly,
+            CleanCategory::DeepOnly,
         ));
         specs.push((
             "Cargo Registry 解压源码".into(),
             paths.cargo_home.join("registry").join("src"),
             false,
-            CleanCategory::PackOnly,
+            CleanCategory::DeepOnly,
         ));
         specs.push((
             "跨盘符迁移回滚快照 (cache/_relocate_backup)".into(),
             paths.cache_dir.join("_relocate_backup"),
             false,
-            CleanCategory::PackOnly,
+            CleanCategory::DeepOnly,
         ));
         specs.push((
             "IDE 升级历史备份 (data/_upgrade_backup)".into(),
             paths.upgrade_backup_dir.clone(),
             false,
-            CleanCategory::PackOnly,
+            CleanCategory::DeepOnly,
         ));
         specs.push((
             "NuGet 全局包缓存 (profile/.nuget)".into(),
             paths.profile_dir.join(".nuget"),
             false,
-            CleanCategory::PackOnly,
+            CleanCategory::DeepOnly,
         ));
         specs.push((
             "NuGet 下载缓存 (Local/NuGet/v3-cache)".into(),
             paths.appdata_local.join("NuGet").join("v3-cache"),
             false,
-            CleanCategory::PackOnly,
+            CleanCategory::DeepOnly,
         ));
+        let third_party_eb = paths.appdata_local.join("com.phantom.matrix").join("EBWebView");
+        if third_party_eb.exists() {
+            specs.push((
+                "第三方测试残留缓存 (EBWebView)".into(),
+                third_party_eb,
+                false,
+                CleanCategory::DeepOnly,
+            ));
+        }
+        push_ai_scratch_and_log_specs(&mut specs, &paths.gemini_dir);
     }
 
     let mut targets = Vec::new();
     let mut seen_paths = HashSet::new();
 
     for (label, path, recreate, category) in specs {
+        if is_critical_protected_path(&path, paths) {
+            continue;
+        }
         if is_preserved(paths, &path, &preserve_set) || !path.exists() {
             continue;
         }
@@ -291,6 +401,9 @@ pub fn scan_clean_targets_with_opts(
         } else {
             paths.root.join(extra_rel)
         };
+        if is_critical_protected_path(&p, paths) {
+            continue;
+        }
         if !p.exists() || is_preserved(paths, &p, &preserve_set) {
             continue;
         }
@@ -324,7 +437,7 @@ pub fn scan_clean_targets_with_opts(
     targets
 }
 
-/// 生成供控制面板展示的垃圾组成明细、日常可释放空间与打包彻底清理总空间（排除面板自身 WebView2 目录）
+/// 生成供控制面板展示的垃圾组成明细、日常可释放空间与深度彻底清理总空间（排除面板自身 WebView2 目录）
 pub fn scan_clean_breakdown(
     paths: &PortablePaths,
     cleanup_cfg: &CleanupConfig,
@@ -344,7 +457,7 @@ pub fn scan_clean_breakdown(
             rel_path: paths.rel_display(&t.path),
             category: match t.category {
                 CleanCategory::Daily => "日常",
-                CleanCategory::PackOnly => "打包",
+                CleanCategory::DeepOnly => "深度",
             },
             size_bytes: t.size_bytes,
             size_fmt: format_bytes(t.size_bytes),
@@ -632,7 +745,7 @@ mod tests {
         let targets = scan_clean_targets_with_opts(&paths, &CleanupConfig::default(), CleanLevel::All, false);
         assert!(targets.iter().all(|t| !t.path.ends_with("webview2")));
         assert_eq!(targets[0].size_bytes, 4096);
-        assert_eq!(targets[0].category, CleanCategory::PackOnly);
+        assert_eq!(targets[0].category, CleanCategory::DeepOnly);
         assert_eq!(targets[1].size_bytes, 512);
         assert_eq!(targets[1].category, CleanCategory::Daily);
 
@@ -645,8 +758,8 @@ mod tests {
     }
 
     #[test]
-    fn pack_only_cleans_upgrade_backup_and_nuget_caches() {
-        let tmp = std::env::temp_dir().join(format!("aiderun_clean_nuget_{}", std::process::id()));
+    fn deep_clean_cleans_upgrade_backup_nuget_and_ai_scratch_while_protecting_conversations() {
+        let tmp = std::env::temp_dir().join(format!("aiderun_clean_deep_{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&tmp);
         let paths = PortablePaths::from_root(tmp.clone(), tmp.join("AideRun.exe"));
         paths.ensure_skeleton().unwrap();
@@ -663,22 +776,52 @@ mod tests {
         std::fs::create_dir_all(nuget_cache.parent().unwrap()).unwrap();
         std::fs::write(&nuget_cache, vec![b'c'; 1000]).unwrap();
 
-        // 验证 Deep（日常清理）不应扫描到 PackOnly 项
-        let deep_targets = scan_clean_targets_with_opts(&paths, &CleanupConfig::default(), CleanLevel::Deep, false);
-        assert!(deep_targets.iter().all(|t| !t.path.starts_with(&paths.upgrade_backup_dir)));
-        assert!(deep_targets.iter().all(|t| !t.path.starts_with(&paths.profile_dir.join(".nuget"))));
+        // 模拟 AI 暂存工程包 (scratch) 和长日志 (.system_generated/logs)
+        let ai_scratch = paths.gemini_dir.join("antigravity").join("brain").join("sess-001").join("scratch").join("test.zip");
+        std::fs::create_dir_all(ai_scratch.parent().unwrap()).unwrap();
+        std::fs::write(&ai_scratch, vec![b's'; 1500]).unwrap();
 
-        // 验证 All（打包前彻底清理）能扫描到并成功清理
+        let ai_log = paths.gemini_dir.join("antigravity").join("brain").join("sess-001").join(".system_generated").join("logs").join("full.jsonl");
+        std::fs::create_dir_all(ai_log.parent().unwrap()).unwrap();
+        std::fs::write(&ai_log, vec![b'l'; 500]).unwrap();
+
+        // 模拟受保护的核心资产：AI 会话数据库 (conversations/*.db)
+        let conv_db = paths.gemini_dir.join("antigravity").join("conversations").join("sess-001.db");
+        std::fs::create_dir_all(conv_db.parent().unwrap()).unwrap();
+        std::fs::write(&conv_db, vec![b'd'; 5000]).unwrap();
+
+        // 模拟受保护的核心资产：账号 state.vscdb 与 settings.json
+        let settings = paths.settings_json.clone();
+        std::fs::create_dir_all(settings.parent().unwrap()).unwrap();
+        std::fs::write(&settings, b"{}").unwrap();
+
+        // 验证 Deep（日常清理）不应扫描到 DeepOnly 项
+        let daily_targets = scan_clean_targets_with_opts(&paths, &CleanupConfig::default(), CleanLevel::Deep, false);
+        assert!(daily_targets.iter().all(|t| !t.path.starts_with(&paths.upgrade_backup_dir)));
+        assert!(daily_targets.iter().all(|t| !t.path.starts_with(&paths.profile_dir.join(".nuget"))));
+
+        // 验证 All（深度彻底清理）能扫描到并成功清理升级备份、NuGet、AI scratch/logs
         let all_targets = scan_clean_targets_with_opts(&paths, &CleanupConfig::default(), CleanLevel::All, false);
         assert!(all_targets.iter().any(|t| t.path == paths.upgrade_backup_dir));
         assert!(all_targets.iter().any(|t| t.path == paths.profile_dir.join(".nuget")));
         assert!(all_targets.iter().any(|t| t.path == paths.appdata_local.join("NuGet").join("v3-cache")));
+        assert!(all_targets.iter().any(|t| t.path.ends_with("scratch")));
+
+        // 严格断言：核心受保护资产 conversations/*.db 和 settings.json 绝对不应出现在待清理列表中
+        assert!(all_targets.iter().all(|t| !t.path.to_string_lossy().contains("conversations")));
+        assert!(all_targets.iter().all(|t| t.path != paths.settings_json));
 
         let freed = run_clean_with_opts(&paths, &CleanupConfig::default(), CleanLevel::All, false, true, false, false).unwrap();
-        assert_eq!(freed.bytes_freed, 6000);
+        assert_eq!(freed.bytes_freed, 8000); // 3000 + 2000 + 1000 + 1500 + 500
         assert!(!paths.upgrade_backup_dir.exists());
         assert!(!paths.profile_dir.join(".nuget").exists());
         assert!(!paths.appdata_local.join("NuGet").join("v3-cache").exists());
+        assert!(!ai_scratch.exists());
+        assert!(!ai_log.exists());
+
+        // 核心资产完好无损
+        assert!(conv_db.exists());
+        assert!(settings.exists());
 
         let _ = std::fs::remove_dir_all(&tmp);
     }

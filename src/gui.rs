@@ -969,34 +969,56 @@ fn handle_worker_action(app: &SharedApp, action: &str, payload: Value) {
                 .get("include_sanitize")
                 .and_then(|v| v.as_bool())
                 .unwrap_or(false);
+            let clean_ai_conversations = payload
+                .get("clean_ai_conversations")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false);
             let cfg = read_cfg(app);
 
-            if mode == "pack" {
-                emit_status(&app.proxy, "busy", "正在执行打包前彻底清理...", None);
+            if mode == "deep" || mode == "pack" {
+                emit_status(&app.proxy, "busy", "正在执行深度彻底清理（备份、依赖缓存与 AI 暂存工程）...", None);
                 match run_clean_with_opts(&app.paths, &cfg.cleanup, CleanLevel::All, false, true, false, false) {
                     Ok(sum) => {
                         let mut final_msg = format!(
-                            "彻底清理完成：释放 {}（清理 {} 项）",
+                            "深度清理完成：释放 {}（清理 {} 项）",
                             format_bytes(sum.bytes_freed),
                             sum.items_cleaned
                         );
                         if include_sanitize {
-                            emit_status(&app.proxy, "busy", "正在执行账号登录态与对话历史隐私脱敏...", None);
+                            emit_status(&app.proxy, "busy", "正在重置账号登录态与授权凭证...", None);
                             match run_sanitize(&app.paths, &cfg.cleanup, false, true) {
                                 Ok(rep) => {
                                     final_msg = format!(
-                                        "打包清理就绪：释放 {}，清理数据库 {} 条敏感记录与 {} 个历史目录（保留中文与免权限设置）",
-                                        format_bytes(sum.bytes_freed),
-                                        rep.db_rows_deleted,
-                                        rep.dirs_cleared
+                                        "{final_msg} · 已清理数据库 {} 条登录凭证",
+                                        rep.db_rows_deleted
                                     );
                                 }
                                 Err(e) => {
-                                    emit_status(&app.proxy, "err", &format!("隐私脱敏失败: {e:#}"), None);
+                                    emit_status(&app.proxy, "err", &format!("重置账号凭据失败: {e:#}"), None);
                                     push_state(app);
                                     return;
                                 }
                             }
+                        }
+                        if clean_ai_conversations {
+                            emit_status(&app.proxy, "busy", "正在执行各工程 AI 历史对话记录清空...", None);
+                            let mut conv_freed = 0usize;
+                            for sub in ["antigravity", "antigravity-ide"] {
+                                let c_dir = app.paths.gemini_dir.join(sub).join("conversations");
+                                if c_dir.is_dir() {
+                                    if let Ok(entries) = std::fs::read_dir(&c_dir) {
+                                        for entry in entries.flatten() {
+                                            let p = entry.path();
+                                            if p.is_file() {
+                                                if let Ok(()) = std::fs::remove_file(p) {
+                                                    conv_freed += 1;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            final_msg = format!("{final_msg} · 已清空历史 AI 对话库 {conv_freed} 个");
                         }
                         emit_status(&app.proxy, "ok", &final_msg, None);
                         push_state(app);
@@ -1757,12 +1779,13 @@ mod tests {
     fn unified_window_dimensions_and_panel_nav_labels_match_spec() {
         assert_eq!(super::APP_WINDOW_WIDTH, 1120.0);
         assert_eq!(super::APP_WINDOW_HEIGHT, 700.0);
-        for expected in ["启动与多开", "清理与打包", "检测与升级", "全组件管理"] {
+        for expected in ["启动与多开", "垃圾清理", "检测与升级", "全组件管理"] {
             assert!(
                 super::PANEL_HTML_TEMPLATE.contains(expected),
                 "主面板导航缺失预期菜单文字: {expected}"
             );
         }
+        assert!(!super::PANEL_HTML_TEMPLATE.contains(">清理与打包<"));
         assert!(!super::PANEL_HTML_TEMPLATE.contains(">Win检测升级<"));
         assert!(!super::PANEL_HTML_TEMPLATE.contains(">组件管理<"));
     }
