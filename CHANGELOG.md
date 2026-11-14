@@ -1,6 +1,17 @@
 <!-- AideRun - 便携版一体化启动器更新日志（简体中文） -->
 # 更新日志 (AideRun)
 
+## [1.3.3] - 2026-11-14
+
+### 清理与打包深度升级（方案 A）
+- **打包前彻底清理纳入 IDE 升级历史备份 (`data/_upgrade_backup`)**：
+  - 在「打包前彻底清理」扫描与执行链路中自动识别历史跨版本升级留下的全量备份目录（`data/_upgrade_backup`），打包前一键清除，释放约 **910 MB** 冗余磁盘空间。
+- **打包前彻底清理纳入 C# / .NET NuGet 全局与下载缓存**：
+  - 新增对 `data/profile/.nuget`（NuGet 全局包库）与 `data/profile/AppData/Local/NuGet/v3-cache`（NuGet HTTP 下载响应缓存）的自动扫描与清理，彻底解决 C# 开发编译后遗留数以 G 计依赖缓存的问题，释放约 **1.55 GB** 空间。
+- **控制台与自我更新版本同步升级为 v1.3.3**：
+  - 更新底层版本号、主界面状态栏标识及 `Release/update.json` 自动更新清单。
+  - 补充针对新版打包清理项的自动化单元测试 `pack_only_cleans_upgrade_backup_and_nuget_caches`。
+
 ## [1.3.2] - 2026-11-12
 
 ### 界面与交互优化

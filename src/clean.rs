@@ -240,6 +240,24 @@ pub fn scan_clean_targets_with_opts(
             false,
             CleanCategory::PackOnly,
         ));
+        specs.push((
+            "IDE 升级历史备份 (data/_upgrade_backup)".into(),
+            paths.upgrade_backup_dir.clone(),
+            false,
+            CleanCategory::PackOnly,
+        ));
+        specs.push((
+            "NuGet 全局包缓存 (profile/.nuget)".into(),
+            paths.profile_dir.join(".nuget"),
+            false,
+            CleanCategory::PackOnly,
+        ));
+        specs.push((
+            "NuGet 下载缓存 (Local/NuGet/v3-cache)".into(),
+            paths.appdata_local.join("NuGet").join("v3-cache"),
+            false,
+            CleanCategory::PackOnly,
+        ));
     }
 
     let mut targets = Vec::new();
@@ -622,6 +640,45 @@ mod tests {
         assert!(webview_file.exists());
         assert!(!small_log.exists());
         assert!(!big_pip.exists());
+
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
+
+    #[test]
+    fn pack_only_cleans_upgrade_backup_and_nuget_caches() {
+        let tmp = std::env::temp_dir().join(format!("aiderun_clean_nuget_{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&tmp);
+        let paths = PortablePaths::from_root(tmp.clone(), tmp.join("AideRun.exe"));
+        paths.ensure_skeleton().unwrap();
+
+        let backup_file = paths.upgrade_backup_dir.join("old_ide.bin");
+        std::fs::create_dir_all(backup_file.parent().unwrap()).unwrap();
+        std::fs::write(&backup_file, vec![b'k'; 3000]).unwrap();
+
+        let nuget_pkg = paths.profile_dir.join(".nuget").join("packages").join("pkg.nupkg");
+        std::fs::create_dir_all(nuget_pkg.parent().unwrap()).unwrap();
+        std::fs::write(&nuget_pkg, vec![b'n'; 2000]).unwrap();
+
+        let nuget_cache = paths.appdata_local.join("NuGet").join("v3-cache").join("cache.dat");
+        std::fs::create_dir_all(nuget_cache.parent().unwrap()).unwrap();
+        std::fs::write(&nuget_cache, vec![b'c'; 1000]).unwrap();
+
+        // 验证 Deep（日常清理）不应扫描到 PackOnly 项
+        let deep_targets = scan_clean_targets_with_opts(&paths, &CleanupConfig::default(), CleanLevel::Deep, false);
+        assert!(deep_targets.iter().all(|t| !t.path.starts_with(&paths.upgrade_backup_dir)));
+        assert!(deep_targets.iter().all(|t| !t.path.starts_with(&paths.profile_dir.join(".nuget"))));
+
+        // 验证 All（打包前彻底清理）能扫描到并成功清理
+        let all_targets = scan_clean_targets_with_opts(&paths, &CleanupConfig::default(), CleanLevel::All, false);
+        assert!(all_targets.iter().any(|t| t.path == paths.upgrade_backup_dir));
+        assert!(all_targets.iter().any(|t| t.path == paths.profile_dir.join(".nuget")));
+        assert!(all_targets.iter().any(|t| t.path == paths.appdata_local.join("NuGet").join("v3-cache")));
+
+        let freed = run_clean_with_opts(&paths, &CleanupConfig::default(), CleanLevel::All, false, true, false, false).unwrap();
+        assert_eq!(freed.bytes_freed, 6000);
+        assert!(!paths.upgrade_backup_dir.exists());
+        assert!(!paths.profile_dir.join(".nuget").exists());
+        assert!(!paths.appdata_local.join("NuGet").join("v3-cache").exists());
 
         let _ = std::fs::remove_dir_all(&tmp);
     }
