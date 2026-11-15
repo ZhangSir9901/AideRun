@@ -137,6 +137,7 @@ struct DashboardState {
     junk_breakdown: Vec<CleanBreakdownItem>,
     innounp_ready: bool,
     components: Vec<ComponentStatusItem>,
+    agent_suite_installed: bool,
 }
 
 #[derive(Clone)]
@@ -1233,6 +1234,25 @@ fn handle_worker_action(app: &SharedApp, action: &str, payload: Value) {
             }
             emit_event_json(&app.proxy, json!({ "kind": "components_data", "components": list }));
         }
+        "deploy_agent_suite" => {
+            let paths = app.paths.clone();
+            let el_proxy = app.proxy.clone();
+            let app_clone = app.clone();
+            emit_status(&el_proxy, "busy", "正在部署与激活 AI 编程超级增强套件 (Modern Web + Context7 + DevTools)...", None);
+
+            std::thread::spawn(move || {
+                match crate::bootstrap::deploy_agent_dev_kit(&paths) {
+                    Ok(()) => {
+                        emit_status(&el_proxy, "ok", "✓ AI 编程超级增强套件已部署并激活！(Modern Web + Context7 + DevTools)", None);
+                        push_state(&app_clone);
+                    }
+                    Err(e) => {
+                        emit_status(&el_proxy, "err", &format!("部署 AI 编程超级增强套件失败: {e:#}"), None);
+                        push_state(&app_clone);
+                    }
+                }
+            });
+        }
         "component_action" => {
             let Some(_guard) = BusyGuard::try_acquire(&app.busy_tools) else {
                 emit_status(&app.proxy, "warn", "另一个组件操作正在进行中，请稍候...", None);
@@ -1580,6 +1600,7 @@ fn build_dashboard_state(
         junk_breakdown,
         innounp_ready,
         components,
+        agent_suite_installed: crate::bootstrap::is_agent_dev_kit_installed(paths),
     }
 }
 

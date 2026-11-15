@@ -824,6 +824,42 @@ pub fn deploy_agent_dev_kit(paths: &PortablePaths) -> Result<()> {
     Ok(())
 }
 
+/// 检测本地是否已经安装并激活 AI 编程超级增强套件 (Modern Web + Context7 + DevTools)
+pub fn is_agent_dev_kit_installed(paths: &PortablePaths) -> bool {
+    let gemini_config_dir = paths.gemini_dir.join("config");
+    let skill_file = gemini_config_dir
+        .join("plugins")
+        .join("modern-web-guidance-plugin")
+        .join("skills")
+        .join("modern-web-guidance")
+        .join("SKILL.md");
+    if !skill_file.is_file() {
+        return false;
+    }
+
+    let config_json_path = gemini_config_dir.join("config.json");
+    if let Ok(txt) = std::fs::read_to_string(&config_json_path) {
+        if let Ok(val) = serde_json::from_str::<serde_json::Value>(&txt) {
+            if let Some(plugins) = val.get("plugins").and_then(|p| p.as_object()) {
+                let mw_ok = plugins.get("modern-web-guidance-plugin")
+                    .and_then(|p| p.get("enabled"))
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(false);
+                let ctx_ok = plugins.get("context7")
+                    .and_then(|p| p.get("enabled"))
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(false);
+                let dt_ok = plugins.get("chrome-devtools-plugin")
+                    .and_then(|p| p.get("enabled"))
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(false);
+                return mw_ok && ctx_ok && dt_ok;
+            }
+        }
+    }
+    false
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
