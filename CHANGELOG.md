@@ -1,6 +1,22 @@
 <!-- AideRun - 便携版一体化启动器更新日志（简体中文） -->
 # 更新日志 (AideRun)
 
+## [1.3.8] - 2026-11-15
+
+### 首次部署界面新增 AI 编程前沿增强套件 (三合一智能体知识库)
+- **首次部署选项组扩充为经典“三剑客”结构 (`assets/preboot.html`)**：
+  - 新增第 3 张水晶磨砂高透选项卡片：**「部署 AI 编程前沿增强套件 (Modern Web + Context7 + DevTools)」**，默认保持勾选；
+  - 选项卡片右侧挂载精致圆角磨砂 GitHub 图标按钮，直接调起系统默认浏览器访问 [GoogleChrome/modern-web-guidance](https://github.com/GoogleChrome/modern-web-guidance) 官方开源仓库。
+- **三合一智能体知识库静默部署与原子化注册 (`src/bootstrap.rs`)**：
+  - 自动在 `.gemini/config/plugins/` 目录中释放 `Modern Web Guidance` 插件包架构与原生核心技能 `SKILL.md`；
+  - 自动原子化合并写入 `.gemini/config/config.json`，一键激活三大高价值插件：
+    1. `modern-web-guidance-plugin`：Google 现代 Web 平台标准规范与代码现代性审计知识库；
+    2. `context7`：实时拉取第三方开源库最新官方版本文档与真实代码示例，杜绝过时 API 幻觉；
+    3. `chrome-devtools-plugin`：Google Chrome 官方 DevTools 与自动化调试排错支持。
+  - 首次启动即拥有开箱即用的最前沿 AI 编程规范与知识库。
+- **IPC 与部署流程无缝衔接 (`src/preboot_gui.rs`)**：
+  - 扩展 `DeployOptions` 支持 `deploy_agent_dev_kit` 状态传递与单元测试全绿覆盖。
+
 ## [1.3.7] - 2026-11-15
 
 ### 全新部署集成免 TUN 代理工具与内置官方简体中文语言包

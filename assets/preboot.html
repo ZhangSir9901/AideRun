@@ -836,6 +836,21 @@
                     </label>
                     <span class="badge-mini">官方内置</span>
                   </div>
+
+                  <div class="deploy-option-card">
+                    <label class="deploy-option-main" for="chkDeployAgentDevKit">
+                      <input type="checkbox" id="chkDeployAgentDevKit" class="glass-checkbox" checked />
+                      <div class="deploy-option-text">
+                        <div class="deploy-option-title">部署 AI 编程前沿增强套件 (Modern Web + Context7 + DevTools)</div>
+                        <div class="deploy-option-desc">集成 Google 现代 Web 规范真理库、全语言最新官方文档实时注入及 Chrome 自动化调试套件</div>
+                      </div>
+                    </label>
+                    <button type="button" class="icon-link-btn option-github-btn" id="btnModernWebGithub" title="访问 Google 现代 Web 规范开源仓库 (GoogleChrome/modern-web-guidance)" aria-label="访问 Modern Web Guidance 开源仓库">
+                      <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
 
                 <div class="desc">
@@ -1285,14 +1300,25 @@
         });
       }
 
+      const btnModernWebGithub = document.getElementById("btnModernWebGithub");
+      if (btnModernWebGithub) {
+        btnModernWebGithub.addEventListener("click", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          postIpc("open_external_url", { url: "https://github.com/GoogleChrome/modern-web-guidance" });
+        });
+      }
+
       function startOfficialDeploy() {
         busyDeploy = true;
         btnClose.disabled = true;
 
         const chkProxy = document.getElementById("chkDeployProxy");
         const chkChinese = document.getElementById("chkDeployChinese");
+        const chkAgentDevKit = document.getElementById("chkDeployAgentDevKit");
         const deployProxy = chkProxy ? chkProxy.checked : true;
         const deployChinese = chkChinese ? chkChinese.checked : true;
+        const deployAgentDevKit = chkAgentDevKit ? chkAgentDevKit.checked : true;
 
         deployAskPane.classList.add("hidden");
         deployDeclinedPane.classList.add("hidden");
@@ -1302,7 +1328,11 @@
         deployFill.style.width = "2%";
         deployStage.textContent = "正在连接官方下载服务...";
         deployDetail.textContent = "准备查询最新 Windows x64 安装包并写入当前目录...";
-        postIpc("confirm_deploy", { deploy_proxy: deployProxy, deploy_chinese: deployChinese });
+        postIpc("confirm_deploy", {
+          deploy_proxy: deployProxy,
+          deploy_chinese: deployChinese,
+          deploy_agent_dev_kit: deployAgentDevKit
+        });
       }
 
       document.getElementById("btnDeployYes").addEventListener("click", startOfficialDeploy);

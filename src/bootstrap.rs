@@ -42,6 +42,7 @@ pub struct DeployProgress {
 pub struct DeployOptions {
     pub deploy_proxy: bool,
     pub deploy_chinese: bool,
+    pub deploy_agent_dev_kit: bool,
 }
 
 impl Default for DeployOptions {
@@ -49,6 +50,7 @@ impl Default for DeployOptions {
         Self {
             deploy_proxy: true,
             deploy_chinese: true,
+            deploy_agent_dev_kit: true,
         }
     }
 }
@@ -270,8 +272,36 @@ where
             }
         }
 
+        // 可选部署 3：AI 编程前沿增强套件 (Modern Web Guidance + Context7 + Chrome DevTools)
+        if options.deploy_agent_dev_kit {
+            on_progress(DeployProgress {
+                percent: 96,
+                stage: "部署 AI 编程前沿增强套件".to_string(),
+                detail: "正在部署 Google 现代 Web 规范、Context7 及 DevTools 知识库...".to_string(),
+                log_line: Some("[*] 正在部署 AI 编程前沿增强套件 (Modern Web + Context7 + DevTools)...".to_string()),
+            });
+            match deploy_agent_dev_kit(paths) {
+                Ok(()) => {
+                    on_progress(DeployProgress {
+                        percent: 98,
+                        stage: "AI 编程增强套件部署完成".to_string(),
+                        detail: "已就绪：前沿 Web 规范真理库、实时官方文档与调试工具已全部激活".to_string(),
+                        log_line: Some("[√] AI 编程前沿增强套件部署成功！三合一智能体知识库已激活".to_string()),
+                    });
+                }
+                Err(err) => {
+                    on_progress(DeployProgress {
+                        percent: 98,
+                        stage: "AI 增强套件提示".to_string(),
+                        detail: format!("增强套件部署跳过: {err}"),
+                        log_line: Some(format!("[!] 部署 AI 增强套件遇到警告（已跳过）: {err}")),
+                    });
+                }
+            }
+        }
+
         on_progress(DeployProgress {
-            percent: 97,
+            percent: 99,
             stage: "写入隔离配置与环境标记".to_string(),
             detail: "正在生成 data/argv.json、settings.json 与 .portable_root...".to_string(),
             log_line: Some("[*] 正在初始化默认便携配置文件与路径锚点...".to_string()),
@@ -679,6 +709,121 @@ pub fn deploy_chinese_language_pack(paths: &PortablePaths, stage_dir: &Path) -> 
     Ok(())
 }
 
+/// 部署 AI 编程前沿增强套件：释放 Modern Web Guidance 核心技能知识库，并在 .gemini/config/config.json 中激活三大高价值插件 (Modern Web + Context7 + DevTools)
+pub fn deploy_agent_dev_kit(paths: &PortablePaths) -> Result<()> {
+    let gemini_config_dir = paths.gemini_dir.join("config");
+    let plugins_dir = gemini_config_dir.join("plugins");
+    std::fs::create_dir_all(&plugins_dir)?;
+
+    let mw_dir = plugins_dir.join("modern-web-guidance-plugin");
+    let mw_skills_dir = mw_dir.join("skills").join("modern-web-guidance");
+    std::fs::create_dir_all(&mw_skills_dir)?;
+
+    // 1. 写入 Modern Web Guidance 的 plugin.json
+    let plugin_json_path = mw_dir.join("plugin.json");
+    if !plugin_json_path.exists() {
+        let plugin_json_content = r#"{
+  "name": "modern-web-guidance-plugin",
+  "displayName": "Modern Web Guidance",
+  "description": "Keep your coding agent up to date with the latest web best practices.",
+  "logo": "assets/logo.svg",
+  "author": {
+    "name": "Google Chrome",
+    "url": "https://developer.chrome.com"
+  },
+  "homepage": "https://developer.chrome.com/docs/modern-web-guidance",
+  "repository": "https://github.com/GoogleChrome/modern-web-guidance",
+  "license": "Apache-2.0",
+  "version": "1.0.0"
+}
+"#;
+        let _ = std::fs::write(&plugin_json_path, plugin_json_content);
+    }
+
+    // 2. 写入 Modern Web Guidance 的 gemini-extension.json
+    let gemini_ext_path = mw_dir.join("gemini-extension.json");
+    if !gemini_ext_path.exists() {
+        let gemini_ext_content = r#"{
+  "name": "modern-web-guidance-plugin",
+  "skills": [
+    "skills/modern-web-guidance"
+  ]
+}
+"#;
+        let _ = std::fs::write(&gemini_ext_path, gemini_ext_content);
+    }
+
+    // 3. 写入 Modern Web Guidance 核心 SKILL.md
+    let skill_md_path = mw_skills_dir.join("SKILL.md");
+    if !skill_md_path.exists() {
+        let skill_md_content = include_str!("../assets/modern_web_skill.md");
+        let _ = std::fs::write(&skill_md_path, skill_md_content);
+    }
+
+    // 4. 原子化合并激活 config.json (将 modern-web-guidance-plugin, context7, chrome-devtools-plugin 注册并设为 enabled)
+    let config_json_path = gemini_config_dir.join("config.json");
+    let mut config_val: serde_json::Value = if config_json_path.is_file() {
+        match std::fs::read_to_string(&config_json_path) {
+            Ok(txt) => serde_json::from_str(&txt).unwrap_or_else(|_| serde_json::json!({})),
+            Err(_) => serde_json::json!({}),
+        }
+    } else {
+        serde_json::json!({})
+    };
+
+    if !config_val.is_object() {
+        config_val = serde_json::json!({});
+    }
+
+    let plugins_obj = config_val
+        .as_object_mut()
+        .unwrap()
+        .entry("plugins")
+        .or_insert_with(|| serde_json::json!({}));
+
+    if let Some(plugins_map) = plugins_obj.as_object_mut() {
+        // (1) 注册 Modern Web Guidance 插件
+        plugins_map.insert(
+            "modern-web-guidance-plugin".to_string(),
+            serde_json::json!({
+                "enabled": true,
+                "installedFrom": {
+                    "id": "antigravity-plugins-official/plugin/modern-web-guidance-plugin",
+                    "marketplace": "antigravity-plugins-official",
+                    "version": "1.0.0"
+                }
+            }),
+        );
+
+        // (2) 注册 Context7 实时最新库官方文档插件
+        plugins_map.entry("context7".to_string()).or_insert_with(|| {
+            serde_json::json!({
+                "enabled": true,
+                "installedFrom": {
+                    "id": "antigravity-plugins-partners/plugin/context7",
+                    "marketplace": "antigravity-plugins-partners"
+                }
+            })
+        });
+
+        // (3) 注册 Chrome DevTools 自动化与排错插件
+        plugins_map.entry("chrome-devtools-plugin".to_string()).or_insert_with(|| {
+            serde_json::json!({
+                "enabled": true,
+                "installedFrom": {
+                    "id": "antigravity-plugins-official/plugin/chrome-devtools-plugin",
+                    "marketplace": "antigravity-plugins-official"
+                }
+            })
+        });
+    }
+
+    let formatted_json = serde_json::to_string_pretty(&config_val)?;
+    std::fs::write(&config_json_path, formatted_json)?;
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -748,6 +893,7 @@ mod tests {
         let opts = DeployOptions::default();
         assert!(opts.deploy_proxy);
         assert!(opts.deploy_chinese);
+        assert!(opts.deploy_agent_dev_kit);
     }
 }
 

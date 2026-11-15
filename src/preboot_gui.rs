@@ -241,7 +241,8 @@ impl PrebootSession {
             "confirm_deploy" if self.stage == PrebootStage::Deploy => {
                 let deploy_proxy = payload.get("deploy_proxy").and_then(|v| v.as_bool()).unwrap_or(true);
                 let deploy_chinese = payload.get("deploy_chinese").and_then(|v| v.as_bool()).unwrap_or(true);
-                self.spawn_official_deploy(deploy_proxy, deploy_chinese);
+                let deploy_agent_dev_kit = payload.get("deploy_agent_dev_kit").and_then(|v| v.as_bool()).unwrap_or(true);
+                self.spawn_official_deploy(deploy_proxy, deploy_chinese, deploy_agent_dev_kit);
                 PrebootIpcAction::Continue
             }
             _ => PrebootIpcAction::Continue,
@@ -438,7 +439,7 @@ impl PrebootSession {
         });
     }
 
-    fn spawn_official_deploy(&self, deploy_proxy: bool, deploy_chinese: bool) {
+    fn spawn_official_deploy(&self, deploy_proxy: bool, deploy_chinese: bool, deploy_agent_dev_kit: bool) {
         if self
             .deploy_busy
             .compare_exchange(false, true, AtomicOrdering::SeqCst, AtomicOrdering::SeqCst)
@@ -455,6 +456,7 @@ impl PrebootSession {
         let options = DeployOptions {
             deploy_proxy,
             deploy_chinese,
+            deploy_agent_dev_kit,
         };
 
         std::thread::spawn(move || {
@@ -561,11 +563,15 @@ mod tests {
     fn preboot_html_contains_proxy_and_chinese_deploy_options_and_github_link() {
         assert!(PREBOOT_HTML_TEMPLATE.contains("chkDeployProxy"));
         assert!(PREBOOT_HTML_TEMPLATE.contains("chkDeployChinese"));
+        assert!(PREBOOT_HTML_TEMPLATE.contains("chkDeployAgentDevKit"));
         assert!(PREBOOT_HTML_TEMPLATE.contains("btnProxyGithub"));
+        assert!(PREBOOT_HTML_TEMPLATE.contains("btnModernWebGithub"));
         assert!(PREBOOT_HTML_TEMPLATE.contains("yuaotian/antigravity-proxy"));
+        assert!(PREBOOT_HTML_TEMPLATE.contains("GoogleChrome/modern-web-guidance"));
         assert!(PREBOOT_HTML_TEMPLATE.contains("ms-ceintl.vscode-language-pack-zh-hans"));
         assert!(PREBOOT_HTML_TEMPLATE.contains("open_external_url"));
         assert!(PREBOOT_HTML_TEMPLATE.contains("deploy_proxy"));
         assert!(PREBOOT_HTML_TEMPLATE.contains("deploy_chinese"));
+        assert!(PREBOOT_HTML_TEMPLATE.contains("deploy_agent_dev_kit"));
     }
 }
