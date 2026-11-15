@@ -11,7 +11,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/github/stars/ZhangSir9901/AideRun?style=flat-square&color=3498db&logo=github" alt="stars">
-  <img src="https://img.shields.io/badge/version-v1.3.9-1abc9c?style=flat-square" alt="version">
+  <img src="https://img.shields.io/badge/version-v1.3.10-1abc9c?style=flat-square" alt="version">
   <img src="https://img.shields.io/github/issues/ZhangSir9901/AideRun?style=flat-square&color=f1c40f" alt="issues">
   <img src="https://img.shields.io/badge/arch-x86__64-lightgrey?style=flat-square" alt="arch">
   <img src="https://img.shields.io/badge/OS-Win10_11-success?style=flat-square" alt="os">
@@ -50,12 +50,12 @@
       </ul>
     </td>
     <td width="33%" valign="top">
-      <h3>⚡ 2. 开箱即用 · 三位一体</h3>
-      <p><b>免 TUN 直连 + 原生汉化 + AI 套件</b></p>
+      <h3>⚡ 2. 开箱即用 · 顶配武装</h3>
+      <p><b>免 TUN 直连 + 原生汉化 + AI 四大套件</b></p>
       <ul>
         <li><b>免 TUN 强制代理直连</b>：内置集成开源网络补丁，免开 TUN 虚拟网卡即可畅快登录与 AI 对话。</li>
         <li><b>官方内置简体中文语言包</b>：微软官方汉化扩展自动部署与云端自动更新，无外部常驻外挂。</li>
-        <li><b>AI 编程超级增强套件</b>：集成 Google 现代 Web 规范、Context7 最新文档与 Chrome DevTools。</li>
+        <li><b>AI 编程四大金刚套件 (4合1)</b>：集成 Google 现代 Web 规范、Context7 最新文档、Chrome DevTools 与 Native Swarm 蜂群协同。</li>
       </ul>
     </td>
     <td width="33%" valign="top">
@@ -121,11 +121,12 @@
   全新部署时可选一键集成开源网络劫持补丁（`version.dll` + `config.json`），免开翻墙软件虚拟网卡 TUN 模式，自动挂接本地 HTTP/SOCKS5 代理端口（支持自动检测与单行代理智能解析），彻底解决官方账号直连登录与 AI 对话网络卡顿痛点。
 * **官方内置简体中文语言包 (`ms-ceintl.vscode-language-pack-zh-hans`)**：
   部署时自动拉取微软官方内置简体中文语言包注册至便携扩展库，锁定 `data/argv.json` 的 `"locale": "zh-cn"`，并在扩展清单中启用自动更新同步，首次启动即为纯净原生中文界面，无需任何外部常驻外挂或控制台黑窗口。
-* **AI 编程超级增强套件 (Modern Web + Context7 + DevTools)**：
+* **AI 编程超级增强套件 (四大金刚 4合1)**：
   - **首次部署默认集成**，老用户亦可在「全组件管理」一键安装或点击更新；
   - **Google 现代 Web 规范**（`modern-web-guidance-plugin`）：释放最新 Web Platform 平台开发真理库与代码现代性规范，杜绝过时前端写法；
   - **实时文档检索**（`context7`）：官方接入 Context7，实时拉取主流第三方开源库最新官方 API 文档与范式，消除模型过时幻觉；
-  - **自动化排错调试**（`chrome-devtools-plugin`）：原生集成 Google Chrome DevTools，赋能智能体深度排错与自动化能力。
+  - **自动化排错调试**（`chrome-devtools-plugin`）：原生集成 Google Chrome DevTools，赋能智能体深度排错与自动化能力；
+  - **多智能体蜂群并行协同**（`swarm`）：集成 Native Swarm 多智能体引擎，支持复杂工程任务拆解与多视角交叉复核。
 
 ### 🧰 3. 零软链接便携组件管理平台：告别 Scoop，常用工具链一键配齐与平滑升级
 * **零软链接纯绿组件综合管理 (`tools/portable/`)**：

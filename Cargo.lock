@@ -22,7 +22,7 @@ dependencies = [
 
 [[package]]
 name = "aide-run"
-version = "1.3.9"
+version = "1.3.10"
 dependencies = [
  "anyhow",
  "chrono",

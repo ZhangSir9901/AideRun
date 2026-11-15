@@ -1238,12 +1238,12 @@ fn handle_worker_action(app: &SharedApp, action: &str, payload: Value) {
             let paths = app.paths.clone();
             let el_proxy = app.proxy.clone();
             let app_clone = app.clone();
-            emit_status(&el_proxy, "busy", "正在部署与激活 AI 编程超级增强套件 (Modern Web + Context7 + DevTools)...", None);
+            emit_status(&el_proxy, "busy", "正在部署与激活 AI 编程超级增强套件 (四大金刚 4合1)...", None);
 
             std::thread::spawn(move || {
                 match crate::bootstrap::deploy_agent_dev_kit(&paths) {
                     Ok(()) => {
-                        emit_status(&el_proxy, "ok", "✓ AI 编程超级增强套件已部署并激活！(Modern Web + Context7 + DevTools)", None);
+                        emit_status(&el_proxy, "ok", "✓ AI 编程超级增强套件 (四大金刚 4合1) 已部署并激活！", None);
                         push_state(&app_clone);
                     }
                     Err(e) => {

@@ -816,6 +816,13 @@ pub fn deploy_agent_dev_kit(paths: &PortablePaths) -> Result<()> {
                 }
             })
         });
+
+        // (4) 注册 Native Swarm 多智能体并行协同蜂群插件
+        plugins_map.entry("swarm".to_string()).or_insert_with(|| {
+            serde_json::json!({
+                "enabled": true
+            })
+        });
     }
 
     let formatted_json = serde_json::to_string_pretty(&config_val)?;
@@ -824,7 +831,7 @@ pub fn deploy_agent_dev_kit(paths: &PortablePaths) -> Result<()> {
     Ok(())
 }
 
-/// 检测本地是否已经安装并激活 AI 编程超级增强套件 (Modern Web + Context7 + DevTools)
+/// 检测本地是否已经安装并激活 AI 编程超级增强套件 (Modern Web + Context7 + DevTools + Swarm 四大金刚)
 pub fn is_agent_dev_kit_installed(paths: &PortablePaths) -> bool {
     let gemini_config_dir = paths.gemini_dir.join("config");
     let skill_file = gemini_config_dir
@@ -853,7 +860,11 @@ pub fn is_agent_dev_kit_installed(paths: &PortablePaths) -> bool {
                     .and_then(|p| p.get("enabled"))
                     .and_then(|v| v.as_bool())
                     .unwrap_or(false);
-                return mw_ok && ctx_ok && dt_ok;
+                let swarm_ok = plugins.get("swarm")
+                    .and_then(|p| p.get("enabled"))
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(false);
+                return mw_ok && ctx_ok && dt_ok && swarm_ok;
             }
         }
     }
