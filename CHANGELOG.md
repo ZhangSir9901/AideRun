@@ -1,21 +1,21 @@
 <!-- AideRun - 便携版一体化启动器更新日志（简体中文） -->
 # 更新日志 (AideRun)
 
-## [1.3.5] - 2026-11-15
+## [1.3.7] - 2026-11-15
 
 ### 全新部署集成免 TUN 代理工具与内置官方简体中文语言包
-- **首次便携部署界面新增高级能力勾选卡片 (`assets/preboot.html`)**：
+- **首次便携部署界面新增高级能力卡片 (`assets/preboot.html`)**：
   - 在首次部署确认面板中新增两项水晶磨砂高透拟态选项卡片（默认均保持勾选），用户可按需自由选择集成能力。
 - **集成免 TUN 强制代理工具 (antigravity-proxy v2.6.3)**：
-  - 选项右侧挂载精致圆角磨砂 GitHub 图标按钮，点击可直接调起系统默认浏览器访问 [yuaotian/antigravity-proxy](https://github.com/yuaotian/antigravity-proxy) 开源仓库。
+  - 选项卡片右侧挂载精致圆角磨砂 GitHub 图标按钮，点击可直接调起系统默认浏览器访问 [yuaotian/antigravity-proxy](https://github.com/yuaotian/antigravity-proxy) 开源仓库。
   - 全新部署时自动下载 Releases 资产包，原地提取 `version.dll` 与 `config.json` 部署至 IDE 根目录，彻底免开 TUN 模式即可直连登录与进行 AI 对话。
   - 自动识别并同步 AideRun 探测到的本地代理主机与端口参数至 `config.json`，实现开箱即用。
 - **集成官方简体中文语言包 (ms-ceintl.vscode-language-pack-zh-hans)**：
   - 自动从微软官方扩展源下载最新版内置语言包（VSIX），静默解压并注册至 `data/extensions/`。
   - 在 `extensions.json` 中配置 `"pinned": false` 并开启全局 `"extensions.autoUpdate": true`，与官方商店保持自动更新同步。
   - 锁定 `data/argv.json` 的 `"locale": "zh-cn"`，首次启动即为原生中文界面，无需任何外部 exe 外挂常驻。
-- **启动器自升级版本同步发布为 v1.3.5**：
-  - 同步更新 `Cargo.toml`、`Release/update.json` 清单并编译生成正式 Release 二进制。
+- **启动器自升级版本同步升级为 v1.3.7**：
+  - 全面更新 `Cargo.toml`、`Release/update.json`、`README.md` 与控制台状态栏标识，并编译生成正式 Release 二进制。
 
 ## [1.3.4] - 2026-11-14
 
