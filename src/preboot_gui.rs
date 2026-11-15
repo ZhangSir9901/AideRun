@@ -12,7 +12,7 @@ use tao::platform::windows::WindowBuilderExtWindows;
 use tao::window::{Icon as WindowIcon, Window, WindowBuilder};
 use wry::{WebContext, WebView, WebViewBuilder};
 
-use crate::bootstrap::deploy_portable_ide_from_official;
+use crate::bootstrap::{deploy_portable_ide_from_official, DeployOptions};
 use crate::config::LauncherConfig;
 use crate::gui::{
     center_window_on_monitor, emit_event_json, make_brand_logo_data_uri, AppEvent,
@@ -24,7 +24,7 @@ use crate::proxy::{
     parse_proxy_string, probe_google_access, read_windows_system_proxy, GoogleProbeReport,
     ProxyEndpoint,
 };
-use crate::self_update::open_github_repository;
+use crate::self_update::{open_browser_url, open_github_repository};
 
 pub const PROXY_WINDOW_TITLE: &str = "AideRun - 网络代理配置";
 pub const DEPLOY_WINDOW_TITLE: &str = "AideRun - Antigravity IDE 便携部署";
@@ -217,6 +217,12 @@ impl PrebootSession {
                 let _ = open_github_repository();
                 PrebootIpcAction::Continue
             }
+            "open_external_url" => {
+                if let Some(url) = payload.get("url").and_then(|v| v.as_str()) {
+                    let _ = open_browser_url(url);
+                }
+                PrebootIpcAction::Continue
+            }
             "quit_app" => {
                 if self.is_deploying() {
                     PrebootIpcAction::Continue
@@ -233,7 +239,9 @@ impl PrebootSession {
                 PrebootIpcAction::Continue
             }
             "confirm_deploy" if self.stage == PrebootStage::Deploy => {
-                self.spawn_official_deploy();
+                let deploy_proxy = payload.get("deploy_proxy").and_then(|v| v.as_bool()).unwrap_or(true);
+                let deploy_chinese = payload.get("deploy_chinese").and_then(|v| v.as_bool()).unwrap_or(true);
+                self.spawn_official_deploy(deploy_proxy, deploy_chinese);
                 PrebootIpcAction::Continue
             }
             _ => PrebootIpcAction::Continue,
@@ -430,7 +438,7 @@ impl PrebootSession {
         });
     }
 
-    fn spawn_official_deploy(&self) {
+    fn spawn_official_deploy(&self, deploy_proxy: bool, deploy_chinese: bool) {
         if self
             .deploy_busy
             .compare_exchange(false, true, AtomicOrdering::SeqCst, AtomicOrdering::SeqCst)
@@ -444,10 +452,14 @@ impl PrebootSession {
         let save_manual = self.save_manual;
         let el_proxy = self.proxy.clone();
         let busy_flag = self.deploy_busy.clone();
+        let options = DeployOptions {
+            deploy_proxy,
+            deploy_chinese,
+        };
 
         std::thread::spawn(move || {
             let res = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                deploy_portable_ide_from_official(&paths, &cfg, save_manual, |prog| {
+                deploy_portable_ide_from_official(&paths, &cfg, save_manual, options, |prog| {
                     emit_event_json(
                         &el_proxy,
                         json!({
@@ -543,5 +555,17 @@ mod tests {
         assert!(PREBOOT_HTML_TEMPLATE.contains("btnGithubTop"));
         assert!(PREBOOT_HTML_TEMPLATE.contains("btnGithubCorner"));
         assert!(PREBOOT_HTML_TEMPLATE.contains("open_github_repo"));
+    }
+
+    #[test]
+    fn preboot_html_contains_proxy_and_chinese_deploy_options_and_github_link() {
+        assert!(PREBOOT_HTML_TEMPLATE.contains("chkDeployProxy"));
+        assert!(PREBOOT_HTML_TEMPLATE.contains("chkDeployChinese"));
+        assert!(PREBOOT_HTML_TEMPLATE.contains("btnProxyGithub"));
+        assert!(PREBOOT_HTML_TEMPLATE.contains("yuaotian/antigravity-proxy"));
+        assert!(PREBOOT_HTML_TEMPLATE.contains("ms-ceintl.vscode-language-pack-zh-hans"));
+        assert!(PREBOOT_HTML_TEMPLATE.contains("open_external_url"));
+        assert!(PREBOOT_HTML_TEMPLATE.contains("deploy_proxy"));
+        assert!(PREBOOT_HTML_TEMPLATE.contains("deploy_chinese"));
     }
 }

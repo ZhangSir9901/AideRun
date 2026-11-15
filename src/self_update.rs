@@ -38,14 +38,19 @@ pub struct SelfUpdateCheckResult {
     pub has_update: bool,
 }
 
-/// 使用系统默认浏览器打开 AideRun GitHub 开源仓库页面（无控制台黑窗）
-pub fn open_github_repository() -> Result<()> {
+/// 使用系统默认浏览器打开指定 URL（无控制台黑窗）
+pub fn open_browser_url(url: &str) -> Result<()> {
     Command::new("rundll32.exe")
-        .args(["url.dll,FileProtocolHandler", GITHUB_REPO_URL])
+        .args(["url.dll,FileProtocolHandler", url])
         .creation_flags(CREATE_NO_WINDOW)
         .spawn()
-        .context("调起默认浏览器打开 GitHub 仓库失败")?;
+        .with_context(|| format!("调起默认浏览器打开 URL [{url}] 失败"))?;
     Ok(())
+}
+
+/// 使用系统默认浏览器打开 AideRun GitHub 开源仓库页面（无控制台黑窗）
+pub fn open_github_repository() -> Result<()> {
+    open_browser_url(GITHUB_REPO_URL)
 }
 
 /// 为当前可执行文件路径附加扩展后缀（保留原 .exe，生成如 AideRun.exe.old）

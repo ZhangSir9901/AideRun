@@ -1,5 +1,6 @@
 // AideRun - 首次纯净目录自动便携环境部署、环境完整性诊断与官方安装包原地解包引擎
 
+use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
 use anyhow::{Context, Result};
@@ -7,13 +8,13 @@ use anyhow::{Context, Result};
 use crate::config::LauncherConfig;
 use crate::console::{init_console, prompt_confirm, ConsoleModeKind};
 use crate::env::apply_proxy_and_tools_to_self;
-use crate::net::download_file_with_progress;
+use crate::net::{download_file_with_progress, extract_archive_clean};
 use crate::paths::PortablePaths;
-use crate::proxy::resolve_and_sync_proxy;
+use crate::proxy::{parse_proxy_string, read_windows_system_proxy, resolve_and_sync_proxy};
 use crate::toolbox::install_portable_tool;
 use crate::upgrade::{
-    apply_atomic_core_swap, check_latest_release, is_inno_setup_installer, read_local_versions,
-    unpack_ide_package,
+    apply_atomic_core_swap, check_latest_release, copy_dir_recursive, is_inno_setup_installer,
+    read_local_versions, unpack_ide_package,
 };
 
 /// 当前目录便携开发环境状态检测结果
@@ -34,6 +35,22 @@ pub struct DeployProgress {
     pub stage: String,
     pub detail: String,
     pub log_line: Option<String>,
+}
+
+/// 首次官网便携部署的可选集成组件
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DeployOptions {
+    pub deploy_proxy: bool,
+    pub deploy_chinese: bool,
+}
+
+impl Default for DeployOptions {
+    fn default() -> Self {
+        Self {
+            deploy_proxy: true,
+            deploy_chinese: true,
+        }
+    }
 }
 
 /// 部署结果摘要
@@ -74,6 +91,7 @@ pub fn deploy_portable_ide_from_official<F>(
     paths: &PortablePaths,
     cfg: &LauncherConfig,
     save_cfg: bool,
+    options: DeployOptions,
     mut on_progress: F,
 ) -> Result<String>
 where
@@ -185,7 +203,7 @@ where
             .context("解包官方 Antigravity IDE 安装包失败")?;
 
         on_progress(DeployProgress {
-            percent: 88,
+            percent: 82,
             stage: "部署核心文件至当前目录".to_string(),
             detail: format!("目标目录: {}", paths.root.display()),
             log_line: Some("[*] 正在将 Antigravity IDE.exe 与 resources/ 写入当前目录...".to_string()),
@@ -196,8 +214,64 @@ where
             let _ = std::fs::remove_dir_all(&paths.upgrade_backup_dir);
         }
 
+        // 可选部署 1：免 TUN 强制代理工具 (antigravity-proxy v2.6.3)
+        if options.deploy_proxy {
+            on_progress(DeployProgress {
+                percent: 86,
+                stage: "部署免 TUN 强制代理工具 (v2.6.3)".to_string(),
+                detail: "正在从开源仓库下载并安装 version.dll 与 config.json...".to_string(),
+                log_line: Some("[*] 正在获取免 TUN 强制代理工具 (antigravity-proxy v2.6.3)...".to_string()),
+            });
+            match deploy_antigravity_proxy(paths, cfg, &stage_dir) {
+                Ok(()) => {
+                    on_progress(DeployProgress {
+                        percent: 90,
+                        stage: "免 TUN 代理工具部署完成".to_string(),
+                        detail: "已释放 version.dll 与 config.json，并同步本地代理配置".to_string(),
+                        log_line: Some("[√] 免 TUN 强制代理工具部署成功！无需开启 TUN 模式即可直连".to_string()),
+                    });
+                }
+                Err(err) => {
+                    on_progress(DeployProgress {
+                        percent: 90,
+                        stage: "代理工具部署提示".to_string(),
+                        detail: format!("代理组件下载跳过: {err}"),
+                        log_line: Some(format!("[!] 下载免 TUN 代理工具遇到网络警告（已跳过）: {err}")),
+                    });
+                }
+            }
+        }
+
+        // 可选部署 2：官方简体中文语言包 (ms-ceintl.vscode-language-pack-zh-hans)
+        if options.deploy_chinese {
+            on_progress(DeployProgress {
+                percent: 91,
+                stage: "部署官方简体中文语言包".to_string(),
+                detail: "正在下载并配置 ms-ceintl.vscode-language-pack-zh-hans...".to_string(),
+                log_line: Some("[*] 正在从官方扩展源下载简体中文语言包...".to_string()),
+            });
+            match deploy_chinese_language_pack(paths, &stage_dir) {
+                Ok(()) => {
+                    on_progress(DeployProgress {
+                        percent: 95,
+                        stage: "官方简体中文语言包部署完成".to_string(),
+                        detail: "已就绪：原生全汉化、已勾选自动更新、locale 设置为 zh-cn".to_string(),
+                        log_line: Some("[√] 官方简体中文语言包集成完成，已开启扩展自动更新".to_string()),
+                    });
+                }
+                Err(err) => {
+                    on_progress(DeployProgress {
+                        percent: 95,
+                        stage: "中文包部署提示".to_string(),
+                        detail: format!("中文包下载跳过: {err}"),
+                        log_line: Some(format!("[!] 下载官方中文语言包遇到网络警告（已跳过）: {err}")),
+                    });
+                }
+            }
+        }
+
         on_progress(DeployProgress {
-            percent: 96,
+            percent: 97,
             stage: "写入隔离配置与环境标记".to_string(),
             detail: "正在生成 data/argv.json、settings.json 与 .portable_root...".to_string(),
             log_line: Some("[*] 正在初始化默认便携配置文件与路径锚点...".to_string()),
@@ -362,6 +436,249 @@ fn has_installed_toolchain(paths: &PortablePaths) -> bool {
     false
 }
 
+/// 下载并部署 antigravity-proxy v2.6.3 免 TUN 代理工具，并根据当前网络智能同步 proxy 参数
+pub fn deploy_antigravity_proxy(
+    paths: &PortablePaths,
+    cfg: &LauncherConfig,
+    stage_dir: &Path,
+) -> Result<()> {
+    let zip_path = stage_dir.join("antigravity-proxy.zip");
+    let extract_dir = stage_dir.join("proxy_extract");
+    let _ = std::fs::remove_dir_all(&extract_dir);
+    let _ = std::fs::remove_file(&zip_path);
+
+    let urls = [
+        "https://github.com/yuaotian/antigravity-proxy/releases/download/v2.6.3/antigravity-proxy-v2.6.3-ide-win-x64.zip",
+        "https://ghproxy.net/https://github.com/yuaotian/antigravity-proxy/releases/download/v2.6.3/antigravity-proxy-v2.6.3-ide-win-x64.zip",
+    ];
+
+    let mut downloaded = false;
+    for url in urls {
+        if download_file_with_progress(url, &zip_path, |_, _, _| {}).is_ok() {
+            downloaded = true;
+            break;
+        }
+    }
+    if !downloaded {
+        anyhow::bail!("无法从开源仓库下载免 TUN 代理工具 release 资源");
+    }
+
+    extract_archive_clean(&zip_path, &extract_dir, paths, false)?;
+
+    // 递归查找 version.dll 与 config.json
+    let mut found_dll: Option<PathBuf> = None;
+    let mut found_cfg: Option<PathBuf> = None;
+    for entry in walkdir::WalkDir::new(&extract_dir).into_iter().flatten() {
+        let path = entry.path();
+        if path.is_file() {
+            let fname = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
+            if fname.eq_ignore_ascii_case("version.dll") && found_dll.is_none() {
+                found_dll = Some(path.to_path_buf());
+            } else if fname.eq_ignore_ascii_case("config.json") && found_cfg.is_none() {
+                found_cfg = Some(path.to_path_buf());
+            }
+        }
+    }
+
+    let dll_src = found_dll.context("未在代理工具压缩包中找到 version.dll")?;
+    let cfg_src = found_cfg.context("未在代理工具压缩包中找到 config.json")?;
+
+    let dest_dll = paths.root.join("version.dll");
+    let dest_cfg = paths.root.join("config.json");
+
+    std::fs::copy(&dll_src, &dest_dll)?;
+
+    // 读取 config.json 并根据当前网络环境智能更新 proxy 端口
+    let mut cfg_val: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&cfg_src)?)
+        .unwrap_or_else(|_| serde_json::json!({}));
+
+    // 智能获取当前代理端点
+    let active_ep = cfg
+        .proxy
+        .manual_proxy
+        .as_deref()
+        .and_then(parse_proxy_string)
+        .or_else(read_windows_system_proxy);
+
+    if let Some(ep) = active_ep {
+        if let Some(obj) = cfg_val.as_object_mut() {
+            obj.insert(
+                "proxy".to_string(),
+                serde_json::json!({
+                    "type": ep.proxy_type,
+                    "host": ep.host,
+                    "port": ep.port
+                }),
+            );
+        }
+    }
+
+    std::fs::write(&dest_cfg, serde_json::to_string_pretty(&cfg_val)?)?;
+    let _ = std::fs::remove_dir_all(&extract_dir);
+    let _ = std::fs::remove_file(&zip_path);
+    Ok(())
+}
+
+/// 从官方扩展源下载并部署微软官方简体中文语言包，并在 extensions.json 与 settings.json 中开启自动更新
+pub fn deploy_chinese_language_pack(paths: &PortablePaths, stage_dir: &Path) -> Result<()> {
+    let zip_path = stage_dir.join("chinese_lang_pack.zip");
+    let extract_dir = stage_dir.join("lang_extract");
+    let _ = std::fs::remove_dir_all(&extract_dir);
+    let _ = std::fs::remove_file(&zip_path);
+
+    let urls = [
+        "https://marketplace.visualstudio.com/_apis/public/gallery/publishers/MS-CEINTL/vsextensions/vscode-language-pack-zh-hans/latest/vspackage",
+        "https://open-vsx.org/api/MS-CEINTL/vscode-language-pack-zh-hans/latest/file/MS-CEINTL.vscode-language-pack-zh-hans-latest.vsix",
+    ];
+
+    let mut downloaded = false;
+    for url in urls {
+        if download_file_with_progress(url, &zip_path, |_, _, _| {}).is_ok() {
+            downloaded = true;
+            break;
+        }
+    }
+    if !downloaded {
+        anyhow::bail!("无法从官方扩展源下载简体中文语言包");
+    }
+
+    extract_archive_clean(&zip_path, &extract_dir, paths, false)?;
+
+    // 查找 extension/package.json 获取真实版本号
+    let pkg_json_path = extract_dir.join("extension").join("package.json");
+    let mut ver_str = "1.106.0".to_string();
+    if pkg_json_path.is_file() {
+        if let Ok(txt) = std::fs::read_to_string(&pkg_json_path) {
+            if let Ok(v) = serde_json::from_str::<serde_json::Value>(&txt) {
+                if let Some(v_str) = v.get("version").and_then(|s| s.as_str()) {
+                    ver_str = v_str.to_string();
+                }
+            }
+        }
+    }
+
+    let folder_name = format!("ms-ceintl.vscode-language-pack-zh-hans-{ver_str}-universal");
+    let dest_ext_dir = paths.extensions_dir.join(&folder_name);
+    let _ = std::fs::remove_dir_all(&dest_ext_dir);
+    std::fs::create_dir_all(&dest_ext_dir)?;
+
+    let src_ext_dir = extract_dir.join("extension");
+    if src_ext_dir.is_dir() {
+        copy_dir_recursive(&src_ext_dir, &dest_ext_dir)?;
+    }
+    let manifest_src = extract_dir.join("extension.vsixmanifest");
+    if manifest_src.is_file() {
+        let _ = std::fs::copy(&manifest_src, dest_ext_dir.join(".vsixmanifest"));
+    }
+
+    // 更新 data/extensions/extensions.json
+    let ext_meta_file = paths.extensions_dir.join("extensions.json");
+    let mut list: Vec<serde_json::Value> = if ext_meta_file.is_file() {
+        std::fs::read_to_string(&ext_meta_file)
+            .ok()
+            .and_then(|s| serde_json::from_str(&s).ok())
+            .unwrap_or_default()
+    } else {
+        Vec::new()
+    };
+
+    list.retain(|item| {
+        item.get("identifier")
+            .and_then(|id| id.get("id"))
+            .and_then(|s| s.as_str())
+            .map(|s| !s.eq_ignore_ascii_case("ms-ceintl.vscode-language-pack-zh-hans"))
+            .unwrap_or(true)
+    });
+
+    let now_ts = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis() as u64)
+        .unwrap_or(1790124951582);
+
+    let fs_path = dest_ext_dir.display().to_string();
+    let url_slash = fs_path.replace('\\', "/");
+    let external_uri = if url_slash.starts_with('/') {
+        format!("file://{url_slash}")
+    } else {
+        format!("file:///{url_slash}")
+    };
+    let uri_path = if url_slash.starts_with('/') {
+        url_slash
+    } else {
+        format!("/{url_slash}")
+    };
+
+    let new_entry = serde_json::json!({
+        "identifier": {
+            "id": "ms-ceintl.vscode-language-pack-zh-hans"
+        },
+        "version": ver_str,
+        "location": {
+            "$mid": 1,
+            "fsPath": fs_path,
+            "_sep": 1,
+            "external": external_uri,
+            "path": uri_path,
+            "scheme": "file"
+        },
+        "relativeLocation": folder_name,
+        "metadata": {
+            "isApplicationScoped": true,
+            "installedTimestamp": now_ts,
+            "pinned": false,
+            "source": "gallery",
+            "id": "e4ee7751-6514-4731-9cdb-7580ffa9e70b",
+            "publisherId": "0b0882c3-aee3-4d7c-b5f9-872f9be0a115",
+            "publisherDisplayName": "MS-CEINTL",
+            "targetPlatform": "universal",
+            "updated": false,
+            "private": false,
+            "isPreReleaseVersion": false,
+            "hasPreReleaseVersion": false
+        }
+    });
+
+    list.push(new_entry);
+    std::fs::write(&ext_meta_file, serde_json::to_string_pretty(&list)?)?;
+
+    // 确保 argv.json 设置 locale = zh-cn
+    let mut argv_val: serde_json::Value = if paths.argv_json.is_file() {
+        std::fs::read_to_string(&paths.argv_json)
+            .ok()
+            .and_then(|s| serde_json::from_str(&s).ok())
+            .unwrap_or_else(|| serde_json::json!({}))
+    } else {
+        serde_json::json!({})
+    };
+    if let Some(obj) = argv_val.as_object_mut() {
+        obj.insert("locale".to_string(), serde_json::json!("zh-cn"));
+        obj.entry("enable-crash-reporter".to_string())
+            .or_insert_with(|| serde_json::json!(false));
+    }
+    std::fs::write(&paths.argv_json, serde_json::to_string_pretty(&argv_val)?)?;
+
+    // 确保 settings.json 开启 extensions.autoUpdate = true
+    if let Some(p) = paths.settings_json.parent() {
+        let _ = std::fs::create_dir_all(p);
+    }
+    let mut settings_val: serde_json::Value = if paths.settings_json.is_file() {
+        std::fs::read_to_string(&paths.settings_json)
+            .ok()
+            .and_then(|s| serde_json::from_str(&s).ok())
+            .unwrap_or_else(|| serde_json::json!({}))
+    } else {
+        serde_json::json!({})
+    };
+    if let Some(obj) = settings_val.as_object_mut() {
+        obj.insert("extensions.autoUpdate".to_string(), serde_json::json!(true));
+    }
+    std::fs::write(&paths.settings_json, serde_json::to_string_pretty(&settings_val)?)?;
+
+    let _ = std::fs::remove_dir_all(&extract_dir);
+    let _ = std::fs::remove_file(&zip_path);
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -424,6 +741,13 @@ mod tests {
         );
 
         let _ = std::fs::remove_dir_all(&tmp);
+    }
+
+    #[test]
+    fn deploy_options_defaults_to_true() {
+        let opts = DeployOptions::default();
+        assert!(opts.deploy_proxy);
+        assert!(opts.deploy_chinese);
     }
 }
 

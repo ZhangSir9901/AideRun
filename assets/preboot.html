@@ -562,6 +562,92 @@
       user-select: text;
     }
 
+    .deploy-options-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 2px;
+    }
+
+    .deploy-option-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 13px 18px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.48);
+      border: 1px solid rgba(255, 255, 255, 0.76);
+      box-shadow: 0 2px 8px rgba(26, 37, 47, 0.04);
+      transition: background 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, transform 0.14s ease;
+    }
+
+    .deploy-option-card:hover {
+      background: rgba(255, 255, 255, 0.72);
+      border-color: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 4px 14px rgba(26, 37, 47, 0.07);
+      transform: translateY(-1px);
+    }
+
+    .deploy-option-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .glass-checkbox {
+      width: 19px;
+      height: 19px;
+      margin-top: 2px;
+      accent-color: var(--accent-blue);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .deploy-option-text {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .deploy-option-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-dark);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .deploy-option-desc {
+      font-size: 12.5px;
+      line-height: 1.5;
+      color: var(--text-muted);
+    }
+
+    .badge-mini {
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(17, 141, 87, 0.12);
+      border: 1px solid rgba(17, 141, 87, 0.32);
+      color: var(--accent-green);
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    .option-github-btn {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+    }
+
     .prompt-card .probe-meta {
       background: rgba(226, 232, 240, 0.56);
       border-color: rgba(148, 163, 184, 0.36);
@@ -723,6 +809,35 @@
                 <div class="path-pill">
                   <strong>目标部署目录：</strong><span id="deployTargetRoot"></span>
                 </div>
+
+                <div class="deploy-options-group">
+                  <div class="deploy-option-card">
+                    <label class="deploy-option-main" for="chkDeployProxy">
+                      <input type="checkbox" id="chkDeployProxy" class="glass-checkbox" checked />
+                      <div class="deploy-option-text">
+                        <div class="deploy-option-title">部署 免 TUN 强制代理工具 (antigravity-proxy v2.6.3)</div>
+                        <div class="deploy-option-desc">通过根目录 version.dll 拦截核心进程流量，无需开 TUN 模式即可直连登录与对话</div>
+                      </div>
+                    </label>
+                    <button type="button" class="icon-link-btn option-github-btn" id="btnProxyGithub" title="访问 antigravity-proxy 开源仓库 (yuaotian/antigravity-proxy)" aria-label="访问 antigravity-proxy 开源仓库">
+                      <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div class="deploy-option-card">
+                    <label class="deploy-option-main" for="chkDeployChinese">
+                      <input type="checkbox" id="chkDeployChinese" class="glass-checkbox" checked />
+                      <div class="deploy-option-text">
+                        <div class="deploy-option-title">部署 官方简体中文语言包 (ms-ceintl.vscode-language-pack-zh-hans)</div>
+                        <div class="deploy-option-desc">深度集成官方内置扩展，菜单与核心界面原生汉化，默认启用自动更新，无需额外外挂</div>
+                      </div>
+                    </label>
+                    <span class="badge-mini">官方内置</span>
+                  </div>
+                </div>
+
                 <div class="desc">
                   点击“是，立即下载部署”后，程序将自动从官方服务器获取最新版 Antigravity IDE 安装包并在当前目录完成零注册表便携化部署。
                 </div>
@@ -1161,9 +1276,24 @@
         deployLogs.scrollTop = deployLogs.scrollHeight;
       }
 
+      const btnProxyGithub = document.getElementById("btnProxyGithub");
+      if (btnProxyGithub) {
+        btnProxyGithub.addEventListener("click", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          postIpc("open_external_url", { url: "https://github.com/yuaotian/antigravity-proxy" });
+        });
+      }
+
       function startOfficialDeploy() {
         busyDeploy = true;
         btnClose.disabled = true;
+
+        const chkProxy = document.getElementById("chkDeployProxy");
+        const chkChinese = document.getElementById("chkDeployChinese");
+        const deployProxy = chkProxy ? chkProxy.checked : true;
+        const deployChinese = chkChinese ? chkChinese.checked : true;
+
         deployAskPane.classList.add("hidden");
         deployDeclinedPane.classList.add("hidden");
         deployProgressPane.classList.remove("hidden");
@@ -1172,7 +1302,7 @@
         deployFill.style.width = "2%";
         deployStage.textContent = "正在连接官方下载服务...";
         deployDetail.textContent = "准备查询最新 Windows x64 安装包并写入当前目录...";
-        postIpc("confirm_deploy");
+        postIpc("confirm_deploy", { deploy_proxy: deployProxy, deploy_chinese: deployChinese });
       }
 
       document.getElementById("btnDeployYes").addEventListener("click", startOfficialDeploy);
