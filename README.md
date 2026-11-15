@@ -116,7 +116,7 @@
 * **更换电脑 / 盘符变动零感知自愈**：
   将整个文件夹拷贝到移动硬盘或 U 盘，插到其他电脑上即使盘符从 `D:` 变成 `F:`，启动器内置的重定位自愈引擎（`relocate.rs`）会自动秒级重定向扩展清单（`extensions.json`）、最近工作区（`storage.json` / `state.vscdb`）及 `.gitconfig`，带快照备份，专属开发环境随身带走不闪退。
 
-### ⚡ 2. 开箱即用三位一体增强：免 TUN 代理直连 + 原生官方汉化 + AI 超级套件
+### ⚡ 2. 开箱即用顶配武装：免 TUN 代理直连 + 原生官方汉化 + AI 四大金刚套件
 * **免 TUN 强制代理直连 (`antigravity-proxy v2.6.3`)**：
   全新部署时可选一键集成开源网络劫持补丁（`version.dll` + `config.json`），免开翻墙软件虚拟网卡 TUN 模式，自动挂接本地 HTTP/SOCKS5 代理端口（支持自动检测与单行代理智能解析），彻底解决官方账号直连登录与 AI 对话网络卡顿痛点。
 * **官方内置简体中文语言包 (`ms-ceintl.vscode-language-pack-zh-hans`)**：
@@ -127,6 +127,15 @@
   - **实时文档检索**（`context7`）：官方接入 Context7，实时拉取主流第三方开源库最新官方 API 文档与范式，消除模型过时幻觉；
   - **自动化排错调试**（`chrome-devtools-plugin`）：原生集成 Google Chrome DevTools，赋能智能体深度排错与自动化能力；
   - **多智能体蜂群并行协同**（`swarm`）：集成 Native Swarm 多智能体引擎，支持复杂工程任务拆解与多视角交叉复核。
+
+#### 🤖 附：四大金刚 AI 编程前沿增强套件技能明细表
+
+| 套件名称 | 目录标识 | 包含技能 (Skills) | 核心能力与价值 |
+| :--- | :--- | :--- | :--- |
+| **Modern Web Guidance** | `modern-web-guidance-plugin` | `modern-web-guidance`<br>`chrome-extensions` | **Google 现代 Web 规范真理库**：注入前沿 Web 规范与 Chrome 扩展开发标准，杜绝废弃代码与陈旧写法 |
+| **Context7** | `context7` | `context7-mcp` | **全语言最新官方文档实时注入**：实时拉取主流第三方开源库最新官方权威文档与源码示例，终结 API 幻觉 |
+| **Chrome DevTools** | `chrome-devtools-plugin` | `chrome-devtools`<br>`a11y-debugging`<br>`cookie-debugging`<br>`debug-optimize-lcp`<br>`memory-leak-debugging`<br>`troubleshooting` | **自动化与浏览器调试排错**：赋能智能体底层浏览器操控、网络抓包、无头控制与性能深度排错能力 |
+| **Native Swarm** | `swarm` | `swarm` | **多智能体蜂群并行协同引擎**：赋能多 Agent 任务并行分工拆解、交叉复核与看板协同作战 |
 
 ### 🧰 3. 零软链接便携组件管理平台：告别 Scoop，常用工具链一键配齐与平滑升级
 * **零软链接纯绿组件综合管理 (`tools/portable/`)**：
