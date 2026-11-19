@@ -11,7 +11,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/github/stars/ZhangSir9901/AideRun?style=flat-square&color=3498db&logo=github" alt="stars">
-  <img src="https://img.shields.io/badge/version-v1.3.10-1abc9c?style=flat-square" alt="version">
+  <img src="https://img.shields.io/badge/version-v1.3.11-1abc9c?style=flat-square" alt="version">
   <img src="https://img.shields.io/github/issues/ZhangSir9901/AideRun?style=flat-square&color=f1c40f" alt="issues">
   <img src="https://img.shields.io/badge/arch-x86__64-lightgrey?style=flat-square" alt="arch">
   <img src="https://img.shields.io/badge/OS-Win10_11-success?style=flat-square" alt="os">

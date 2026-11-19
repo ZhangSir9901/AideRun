@@ -99,7 +99,32 @@ impl ProxyEndpoint {
         }
     }
 
+    /// 判断当前代理协议是否为真正的 HTTP / HTTPS 协议（非 SOCKS 协议）
+    pub fn is_http_protocol(&self) -> bool {
+        let scheme = self.normalized_scheme();
+        scheme == "http" || scheme == "https"
+    }
+
+    /// 生成纯正标准的 HTTP/HTTPS 代理 URL（仅当协议为 http/https 时返回 Some，SOCKS 协议返回 None）
+    /// 注意：Node.js 18+ 内置 undici (fetch) 严格校验 HTTP_PROXY 与 HTTPS_PROXY 必须以 http:// 或 https:// 开头。
+    /// 若强行向 HTTP_PROXY 写入 socks5:// 格式，会导致 undici 抛出硬中断错误：
+    /// Invalid URL protocol: the URL must start with `http:` or `https:`. (UND_ERR_INVALID_ARG)
+    pub fn valid_http_proxy_url(&self) -> Option<String> {
+        if self.is_http_protocol() {
+            Some(format!(
+                "{}://{}{}:{}",
+                self.normalized_scheme(),
+                self.auth_url_prefix(),
+                self.host,
+                self.port
+            ))
+        } else {
+            None
+        }
+    }
+
     /// 生成 HTTP/HTTPS 代理 URL（若为 SOCKS 系列则透传其实际 SOCKS URL，防止对纯 SOCKS 端口误发 HTTP CONNECT）
+    #[allow(dead_code)]
     pub fn http_url(&self) -> String {
         let scheme = self.normalized_scheme();
         if scheme.starts_with("socks") {

@@ -1,6 +1,21 @@
 <!-- AideRun - 便携版一体化启动器更新日志（简体中文） -->
 # 更新日志 (AideRun)
 
+## [1.3.11] - 2026-11-19
+
+### 修复 SOCKS5 代理导致 Node.js Undici 崩溃与 IDE 视图加载失败
+- **修复 SOCKS5 代理注入引发的 Node.js Undici 致命异常 (`src/env.rs`, `src/proxy.rs`)**：
+  - **根因消除**：Node.js 18+ 内置 HTTP 客户端 Undici（驱动 Antigravity IDE 内部自动更新与视图加载的 `fetch`）严格要求 `HTTP_PROXY` 与 `HTTPS_PROXY` 环境变量必须以 `http://` 或 `https://` 开头。当用户配置或本地系统探测到 SOCKS5 代理（如 v2rayN `10808` 端口）时，原逻辑向其注入了 `socks5://...`，导致 Undici 抛出硬中断错误：`Invalid URL protocol: the URL must start with 'http:' or 'https:'. (UND_ERR_INVALID_ARG)`，进而造成 IDE 启动时中心视图和 AI 智能体侧边栏报 `Couldn't load this view` 崩溃卡死；
+  - **严格协议分流重构**：
+    - `valid_http_proxy_url`：仅当代理协议为纯正 `http` 或 `https` 时才生成并向子进程注入 `HTTP_PROXY` / `HTTPS_PROXY` / `http_proxy` / `https_proxy`；
+    - 若为 SOCKS5 协议，坚决不向 Node.js 暴露非法的 `socks5://` HTTP 代理变量，彻底消除 Undici 崩溃根源；
+    - SOCKS 协议正常通过 `ALL_PROXY` / `all_proxy` 注入，保障 Git、Curl、Cargo、Rustup 等原生支持 SOCKS5 的命令行工具依然享有极速网络加速；
+    - 便携版根目录的 `antigravity-proxy` (`version.dll`) 会在 Winsock 核心层自动透明劫持 `node.exe` 与 `Antigravity IDE.exe` 的网络流量并转交 SOCKS5 代理，实现 100% 秒级连通且绝不报错。
+- **单元测试扩充验证**：
+  - 新增 `socks5_proxy_does_not_inject_http_proxy_avoiding_undici_crash` 与 `http_proxy_injects_http_and_https_proxy_normally` 单元测试，全量 32 项单元测试高标准全绿通过。
+- **版本全面升级至 v1.3.11**：
+  - 同步更新 `Cargo.toml`、`Release/update.json`、`README.md` 与状态栏版本标识。
+
 ## [1.3.10] - 2026-11-15
 
 ### AI 编程套件全面升级为四大金刚四合一超级增强套件

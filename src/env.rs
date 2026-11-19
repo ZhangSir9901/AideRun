@@ -74,8 +74,18 @@ pub fn build_isolated_env(
 
     if cfg.proxy.inject_env {
         if let Some(ep) = proxy {
-            vars.push(("HTTP_PROXY".into(), ep.http_url()));
-            vars.push(("HTTPS_PROXY".into(), ep.http_url()));
+            // 严格协议分流：
+            // Node.js 18+ 内置 undici (fetch) 严格要求 HTTP_PROXY 与 HTTPS_PROXY 必须为 http: 或 https: 协议头。
+            // 若代理为 socks5，强行注入 HTTP_PROXY 会导致 undici 抛出硬中断错误：
+            // "Invalid URL protocol: the URL must start with `http:` or `https:`. (UND_ERR_INVALID_ARG)"
+            // 进而引起 Antigravity IDE 启动时中心区/AI智能体视图报 Couldn't load this view 崩溃。
+            // 因此：仅当代理协议为标准 http/https 时才注入 HTTP_PROXY / HTTPS_PROXY；
+            // SOCKS 协议则通过 ALL_PROXY 注入（供 curl / git 等命令行工具正常使用），
+            // 并由便携根目录的 antigravity-proxy (version.dll) 在 Winsock 底层透明接管！
+            if let Some(http_url) = ep.valid_http_proxy_url() {
+                vars.push(("HTTP_PROXY".into(), http_url.clone()));
+                vars.push(("HTTPS_PROXY".into(), http_url));
+            }
             vars.push(("ALL_PROXY".into(), ep.all_proxy_url()));
         }
     }
@@ -111,11 +121,18 @@ pub fn apply_proxy_and_tools_to_self(paths: &PortablePaths, cfg: &LauncherConfig
     std::env::set_var("PATH", composed_path);
     if cfg.proxy.inject_env {
         if let Some(ep) = proxy {
-            std::env::set_var("HTTP_PROXY", ep.http_url());
-            std::env::set_var("HTTPS_PROXY", ep.http_url());
+            if let Some(http_url) = ep.valid_http_proxy_url() {
+                std::env::set_var("HTTP_PROXY", &http_url);
+                std::env::set_var("HTTPS_PROXY", &http_url);
+                std::env::set_var("http_proxy", &http_url);
+                std::env::set_var("https_proxy", &http_url);
+            } else {
+                std::env::remove_var("HTTP_PROXY");
+                std::env::remove_var("HTTPS_PROXY");
+                std::env::remove_var("http_proxy");
+                std::env::remove_var("https_proxy");
+            }
             std::env::set_var("ALL_PROXY", ep.all_proxy_url());
-            std::env::set_var("http_proxy", ep.http_url());
-            std::env::set_var("https_proxy", ep.http_url());
             std::env::set_var("all_proxy", ep.all_proxy_url());
         } else {
             for key in [
@@ -282,6 +299,41 @@ mod tests {
             split_windows_drive_and_path(Path::new(r"\\?\E:\Work\data\profile")),
             Some(("E:".to_string(), r"\Work\data\profile".to_string()))
         );
+    }
+
+    #[test]
+    fn socks5_proxy_does_not_inject_http_proxy_avoiding_undici_crash() {
+        let tmp = std::env::temp_dir().join(format!("aiderun_env_test_{}", std::process::id()));
+        let paths = crate::paths::PortablePaths::from_root(tmp.clone(), tmp.join("AideRun.exe"));
+        let cfg = crate::config::LauncherConfig::default();
+        let ep = crate::proxy::ProxyEndpoint {
+            proxy_type: "socks5".to_string(),
+            host: "127.0.0.1".to_string(),
+            port: 10808,
+            username: None,
+            password: None,
+        };
+        let vars = super::build_isolated_env(&paths, &cfg, Some(&ep));
+        assert!(vars.iter().all(|(k, _)| k != "HTTP_PROXY" && k != "HTTPS_PROXY"));
+        assert!(vars.iter().any(|(k, v)| k == "ALL_PROXY" && v == "socks5://127.0.0.1:10808"));
+    }
+
+    #[test]
+    fn http_proxy_injects_http_and_https_proxy_normally() {
+        let tmp = std::env::temp_dir().join(format!("aiderun_env_test_http_{}", std::process::id()));
+        let paths = crate::paths::PortablePaths::from_root(tmp.clone(), tmp.join("AideRun.exe"));
+        let cfg = crate::config::LauncherConfig::default();
+        let ep = crate::proxy::ProxyEndpoint {
+            proxy_type: "http".to_string(),
+            host: "127.0.0.1".to_string(),
+            port: 7890,
+            username: None,
+            password: None,
+        };
+        let vars = super::build_isolated_env(&paths, &cfg, Some(&ep));
+        assert!(vars.iter().any(|(k, v)| k == "HTTP_PROXY" && v == "http://127.0.0.1:7890"));
+        assert!(vars.iter().any(|(k, v)| k == "HTTPS_PROXY" && v == "http://127.0.0.1:7890"));
+        assert!(vars.iter().any(|(k, v)| k == "ALL_PROXY" && v == "http://127.0.0.1:7890"));
     }
 }
 
