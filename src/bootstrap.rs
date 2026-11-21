@@ -272,21 +272,21 @@ where
             }
         }
 
-        // 可选部署 3：AI 编程前沿增强套件 (Modern Web Guidance + Context7 + Chrome DevTools)
+        // 可选部署 3：AI 编程超级增强套件 (四大金刚 4合1: Modern Web + Context7 + DevTools + Swarm)
         if options.deploy_agent_dev_kit {
             on_progress(DeployProgress {
                 percent: 96,
-                stage: "部署 AI 编程前沿增强套件".to_string(),
-                detail: "正在部署 Google 现代 Web 规范、Context7 及 DevTools 知识库...".to_string(),
-                log_line: Some("[*] 正在部署 AI 编程前沿增强套件 (Modern Web + Context7 + DevTools)...".to_string()),
+                stage: "部署 AI 编程超级增强套件 (四大金刚 4合1)".to_string(),
+                detail: "正在部署 Google 现代 Web 规范、Context7、DevTools 及 Native Swarm 知识库...".to_string(),
+                log_line: Some("[*] 正在部署 AI 编程超级增强套件 (四大金刚 4合1)...".to_string()),
             });
             match deploy_agent_dev_kit(paths) {
                 Ok(()) => {
                     on_progress(DeployProgress {
                         percent: 98,
-                        stage: "AI 编程增强套件部署完成".to_string(),
-                        detail: "已就绪：前沿 Web 规范真理库、实时官方文档与调试工具已全部激活".to_string(),
-                        log_line: Some("[√] AI 编程前沿增强套件部署成功！三合一智能体知识库已激活".to_string()),
+                        stage: "AI 编程超级增强套件部署完成".to_string(),
+                        detail: "已就绪：前沿 Web 规范真理库、实时官方文档、调试工具与蜂群引擎已全部激活".to_string(),
+                        log_line: Some("[√] AI 编程超级增强套件部署成功！四大金刚智能体知识库已激活".to_string()),
                     });
                 }
                 Err(err) => {
@@ -425,7 +425,82 @@ pub fn ensure_portable_ready(
     Ok(report)
 }
 
-/// 生成缺失的默认便携配置文件（data/argv.json、settings.json）
+/// 强制检查并物理关闭所有遥测与崩溃报告开关（argv.json, settings.json, .gemini/config/config.json）
+/// 保证启动器每次拉起环境或运行时，均物理锁死遥测数据外泄，若有篡改开启则自动覆写关闭
+pub fn enforce_disable_telemetry(paths: &PortablePaths) -> Result<bool> {
+    let mut modified = false;
+
+    // 1. argv.json: 强制锁死 Chromium 底层崩溃转储上报
+    if paths.argv_json.is_file() {
+        if let Ok(content) = std::fs::read_to_string(&paths.argv_json) {
+            if let Ok(mut val) = serde_json::from_str::<serde_json::Value>(&content) {
+                if let Some(obj) = val.as_object_mut() {
+                    let needs_fix = match obj.get("enable-crash-reporter") {
+                        Some(serde_json::Value::Bool(b)) => *b,
+                        _ => true,
+                    };
+                    if needs_fix {
+                        obj.insert("enable-crash-reporter".to_string(), serde_json::json!(false));
+                        if let Ok(pretty) = serde_json::to_string_pretty(&val) {
+                            let _ = std::fs::write(&paths.argv_json, pretty);
+                            modified = true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // 2. data/user-data/User/settings.json: 强制锁死 VS Code 编辑器通用遥测
+    if paths.settings_json.is_file() {
+        if let Ok(content) = std::fs::read_to_string(&paths.settings_json) {
+            if let Ok(mut val) = serde_json::from_str::<serde_json::Value>(&content) {
+                if let Some(obj) = val.as_object_mut() {
+                    let needs_fix = match obj.get("telemetry.telemetryLevel") {
+                        Some(serde_json::Value::String(s)) => s != "off",
+                        _ => true,
+                    };
+                    if needs_fix {
+                        obj.insert("telemetry.telemetryLevel".to_string(), serde_json::json!("off"));
+                        if let Ok(pretty) = serde_json::to_string_pretty(&val) {
+                            let _ = std::fs::write(&paths.settings_json, pretty);
+                            modified = true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // 3. data/profile/.gemini/config/config.json: 强制锁死 Google Antigravity 专有 AI 账号遥测
+    let gemini_cfg_file = paths.gemini_dir.join("config").join("config.json");
+    if gemini_cfg_file.is_file() {
+        if let Ok(content) = std::fs::read_to_string(&gemini_cfg_file) {
+            if let Ok(mut val) = serde_json::from_str::<serde_json::Value>(&content) {
+                if let Some(obj) = val.as_object_mut() {
+                    let uobj = obj.entry("userSettings").or_insert_with(|| serde_json::json!({}));
+                    if let Some(umap) = uobj.as_object_mut() {
+                        let needs_fix = match umap.get("telemetryEnabled") {
+                            Some(serde_json::Value::Bool(b)) => *b,
+                            _ => true,
+                        };
+                        if needs_fix {
+                            umap.insert("telemetryEnabled".to_string(), serde_json::json!(false));
+                            if let Ok(pretty) = serde_json::to_string_pretty(&val) {
+                                let _ = std::fs::write(&gemini_cfg_file, pretty);
+                                modified = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(modified)
+}
+
+/// 生成缺失的默认便携配置文件（data/argv.json、settings.json、.gemini/config/config.json）
 pub fn seed_default_portable_configs(paths: &PortablePaths, cfg: &LauncherConfig) -> Result<bool> {
     let mut created_any = false;
 
@@ -447,9 +522,29 @@ pub fn seed_default_portable_configs(paths: &PortablePaths, cfg: &LauncherConfig
         if let Some(parent) = paths.settings_json.parent() {
             std::fs::create_dir_all(parent)?;
         }
-        std::fs::write(&paths.settings_json, "{}\n")?;
+        let settings = serde_json::json!({
+            "telemetry.telemetryLevel": "off"
+        });
+        std::fs::write(&paths.settings_json, serde_json::to_string_pretty(&settings)?)?;
         created_any = true;
     }
+
+    let gemini_cfg_file = paths.gemini_dir.join("config").join("config.json");
+    if !gemini_cfg_file.exists() {
+        if let Some(parent) = gemini_cfg_file.parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+        let gemini_cfg = serde_json::json!({
+            "userSettings": {
+                "telemetryEnabled": false
+            }
+        });
+        let _ = std::fs::write(&gemini_cfg_file, serde_json::to_string_pretty(&gemini_cfg)?);
+        created_any = true;
+    }
+
+    // 始终执行安全防御：关闭所有已存在或新建配置的遥测开关
+    let _ = enforce_disable_telemetry(paths);
 
     Ok(created_any)
 }
@@ -825,6 +920,16 @@ pub fn deploy_agent_dev_kit(paths: &PortablePaths) -> Result<()> {
         });
     }
 
+    // 确保专有层 AI 账号遥测严格关闭
+    let user_settings_obj = config_val
+        .as_object_mut()
+        .unwrap()
+        .entry("userSettings")
+        .or_insert_with(|| serde_json::json!({}));
+    if let Some(user_map) = user_settings_obj.as_object_mut() {
+        user_map.insert("telemetryEnabled".to_string(), serde_json::json!(false));
+    }
+
     let formatted_json = serde_json::to_string_pretty(&config_val)?;
     std::fs::write(&config_json_path, formatted_json)?;
 
@@ -941,6 +1046,43 @@ mod tests {
         assert!(opts.deploy_proxy);
         assert!(opts.deploy_chinese);
         assert!(opts.deploy_agent_dev_kit);
+    }
+
+    #[test]
+    fn enforces_disabling_all_telemetry_toggles() {
+        let tmp = std::env::temp_dir().join(format!("aiderun_telem_{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&tmp);
+        let paths = PortablePaths::from_root(tmp.clone(), tmp.join("AideRun.exe"));
+
+        // 模拟已存在开启遥测的文件
+        std::fs::create_dir_all(paths.argv_json.parent().unwrap()).unwrap();
+        std::fs::create_dir_all(paths.settings_json.parent().unwrap()).unwrap();
+        let gemini_dir = paths.gemini_dir.join("config");
+        std::fs::create_dir_all(&gemini_dir).unwrap();
+
+        std::fs::write(&paths.argv_json, r#"{"enable-crash-reporter": true}"#).unwrap();
+        std::fs::write(&paths.settings_json, r#"{"telemetry.telemetryLevel": "all"}"#).unwrap();
+        std::fs::write(
+            gemini_dir.join("config.json"),
+            r#"{"userSettings": {"telemetryEnabled": true}}"#,
+        ).unwrap();
+
+        let modified = enforce_disable_telemetry(&paths).unwrap();
+        assert!(modified);
+
+        let argv_str = std::fs::read_to_string(&paths.argv_json).unwrap();
+        assert!(argv_str.contains(r#""enable-crash-reporter": false"#));
+
+        let settings_str = std::fs::read_to_string(&paths.settings_json).unwrap();
+        assert!(settings_str.contains(r#""telemetry.telemetryLevel": "off""#));
+
+        let gemini_str = std::fs::read_to_string(gemini_dir.join("config.json")).unwrap();
+        assert!(gemini_str.contains(r#""telemetryEnabled": false"#));
+
+        // 再次调用应无修改，保持幂等
+        assert!(!enforce_disable_telemetry(&paths).unwrap());
+
+        let _ = std::fs::remove_dir_all(&tmp);
     }
 }
 

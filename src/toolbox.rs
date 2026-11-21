@@ -632,17 +632,44 @@ fn resolve_latest_7zip() -> Result<(String, String)> {
 
 fn resolve_latest_innounp() -> Result<(String, String)> {
     let url = "https://raw.githubusercontent.com/jrathlev/InnoUnpacker-Windows-GUI/refs/heads/master/innounp-2/bin/innounp-2.zip";
-    let api = "https://api.github.com/repos/jrathlev/InnoUnpacker-Windows-GUI/commits?path=innounp-2/bin/innounp-2.zip&per_page=1";
-    let raw = http_get_text(api, 10)?;
-    let arr: Vec<Value> = serde_json::from_str(&raw)?;
-    let msg = arr
-        .first()
-        .and_then(|c| c.get("commit"))
-        .and_then(|c| c.get("message"))
-        .and_then(|m| m.as_str())
-        .unwrap_or("");
-    let ver = extract_first_semver(msg).context("未能从提交日志解析 innounp-2 版本")?;
-    Ok((ver, url.to_string()))
+
+    // 方案 1：优先直读 innounp-2/readme.md，作者在文件中权威标注下载版本（如 `Download version 2.71.4`）
+    // 且 raw 接口不受 GitHub API 频次与速率限制
+    let readme_urls = [
+        "https://raw.githubusercontent.com/jrathlev/InnoUnpacker-Windows-GUI/master/innounp-2/readme.md",
+        "https://ghproxy.net/https://raw.githubusercontent.com/jrathlev/InnoUnpacker-Windows-GUI/master/innounp-2/readme.md",
+    ];
+    for r_url in readme_urls {
+        if let Ok(readme) = http_get_text(r_url, 8) {
+            for line in readme.lines() {
+                if line.contains("Download version") || line.contains("version 2.") {
+                    if let Some(ver) = extract_first_semver(line) {
+                        return Ok((ver, url.to_string()));
+                    }
+                }
+            }
+        }
+    }
+
+    // 方案 2：回退至查询 GitHub Commits 列表（深度扫描最近 5 条 commit，查找第一条带版本号的提交）
+    let api = "https://api.github.com/repos/jrathlev/InnoUnpacker-Windows-GUI/commits?path=innounp-2/bin/innounp-2.zip&per_page=5";
+    if let Ok(raw) = http_get_text(api, 8) {
+        if let Ok(arr) = serde_json::from_str::<Vec<Value>>(&raw) {
+            for c in arr {
+                let msg = c
+                    .get("commit")
+                    .and_then(|co| co.get("message"))
+                    .and_then(|m| m.as_str())
+                    .unwrap_or("");
+                if let Some(ver) = extract_first_semver(msg) {
+                    return Ok((ver, url.to_string()));
+                }
+            }
+        }
+    }
+
+    // 方案 3：离线保底稳定最新版本
+    Ok(("2.71.4".to_string(), url.to_string()))
 }
 
 fn query_github_release_json(owner_repo: &str) -> Result<(String, Vec<(String, String)>)> {
@@ -917,5 +944,8 @@ mod tests {
         let (v, u) = parse_7zip_version_from_html(seven_html).unwrap();
         assert_eq!(v, "26.06");
         assert!(u.ends_with("/26.06/7zr.exe"));
+
+        let innounp_readme = "[**Download version 2.71.4**](https://github.com/jrathlev/InnoUnpacker-Windows-GUI/tree/master/innounp-2/bin)";
+        assert_eq!(extract_first_semver(innounp_readme).as_deref(), Some("2.71.4"));
     }
 }

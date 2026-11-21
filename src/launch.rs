@@ -135,7 +135,10 @@ fn spawn_ide_profile(
         let _ = auto_heal_scoop_if_needed(paths, false);
     }
 
-    // 3. 只读系统代理探测并安全同步至 config.json
+    // 3. 强制关闭遥测开关，确保启动前所有遥测彻底静默
+    let _ = crate::bootstrap::enforce_disable_telemetry(paths);
+
+    // 4. 只读系统代理探测并安全同步至 config.json
     let proxy = resolve_and_sync_proxy(&paths.proxy_config, &cfg.proxy);
     let env_vars = build_isolated_env(paths, cfg, proxy.as_ref());
 

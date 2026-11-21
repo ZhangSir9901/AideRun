@@ -1339,6 +1339,7 @@ fn handle_worker_action(app: &SharedApp, action: &str, payload: Value) {
         }
         "check_self_update" => {
             let force = payload.get("force").and_then(|v| v.as_bool()).unwrap_or(false);
+            let heartbeat = payload.get("heartbeat").and_then(|v| v.as_bool()).unwrap_or(false);
             if !force {
                 if let Some(cached) = app
                     .self_update_cache
@@ -1350,7 +1351,7 @@ fn handle_worker_action(app: &SharedApp, action: &str, payload: Value) {
                     return;
                 }
             }
-            run_self_update_check(app, true);
+            run_self_update_check(app, !heartbeat);
         }
         "run_self_update" => {
             let Some(_guard) = BusyGuard::try_acquire(&app.busy_self_update) else {

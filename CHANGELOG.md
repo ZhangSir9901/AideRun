@@ -1,6 +1,27 @@
 <!-- AideRun - 便携版一体化启动器更新日志（简体中文） -->
 # 更新日志 (AideRun)
 
+## [1.3.12] - 2026-11-22
+
+### 全自动物理强闭遥测、升级心跳检测引擎与 innounp 组件新版探测加固
+- **程序绿化与每次启动时全自动物理强关数据遥测 (`src/bootstrap.rs`, `src/main.rs`, `src/launch.rs`)**：
+  - **三重物理封死防御架构**：彻底关闭 VS Code、Chromium 底座与 Google Antigravity AI 账户专有层的所有数据遥测通道；
+    1. **Chromium 崩溃上报锁定**：`data/argv.json` 强制锁定 `"enable-crash-reporter": false`；
+    2. **VS Code 编辑器遥测锁定**：`data/user-data/User/settings.json` 强制锁定 `"telemetry.telemetryLevel": "off"`；
+    3. **Antigravity AI 账户遥测锁定**：`data/profile/.gemini/config/config.json` 的 `userSettings` 字典内强制锁定 `"telemetryEnabled": false`；
+  - **启动主动安全巡检 (Active Telemetry Defense)**：在 `main()` 启动入口与 `launch_ide()` 拉起 IDE 进程前一刻主动巡检，即使用户在 IDE 运行过程中手动在设置面板勾选开启 `Enable Telemetry`，下次由 AideRun 启动时也会被立即物理覆写关闭。
+- **启动器自升级改造为无感定时心跳检测 (`assets/panel.html`, `src/gui.rs`)**：
+  - **界面移除手动检查按钮**：彻底移除 Tab 3 卡片右侧冗余的 `🔍 检查自身` (`#btn-check-self-update`) 按钮，视觉更清爽大气；
+  - **后台静默心跳机制**：首发延时 1.2 秒检测，并在前端挂载 60 秒定时心跳 (`heartbeat: true`)，完全静默轮询 GitHub 最新版本，不抢占或覆盖底部状态栏文本；
+  - **即时激活升级动作**：一旦心跳探知到新版本，`⚡ 无感热替换升级` 按钮自动点亮解除禁用并展示流光动画，右下角浮动提示徽标同步浮现。
+- **修复并加固 `innounp-2` 组件新版检测假死为“待检测”问题 (`src/toolbox.rs`)**：
+  - **根因消除**：上游仓库 `jrathlev/InnoUnpacker-Windows-GUI` 最新提交仅写为 `"Update innounp-2.zip"`，缺乏版本号导致单一 Commit 提取失败；
+  - **三重锁定引擎**：优先直读 `innounp-2/readme.md` 提取官方权威下载版本号（当前最新 `2.71.4`，且免除 API 速率限制），辅以多级提交回溯与保底稳定版本，彻底消灭“待检测”假死，准确识别本地 2.71.3 与官方 2.71.4 之间的升级差。
+- **部署日志与文案全面核对校准 (`src/bootstrap.rs`)**：
+  - 将后台部署日志中残留的“AI 编程前沿增强套件三合一”文案彻底同步校正为“AI 编程超级增强套件 (四大金刚 4合1)”。
+- **版本全面升级至 v1.3.12**：
+  - 同步更新 `Cargo.toml`、`Release/update.json`、`README.md` 与状态栏版本标识。
+
 ## [1.3.11] - 2026-11-19
 
 ### 修复 SOCKS5 代理导致 Node.js Undici 崩溃与 IDE 视图加载失败

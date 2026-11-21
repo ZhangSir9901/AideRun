@@ -680,7 +680,6 @@
             <span class="desc-xs">当前: <strong id="self-local-ver">--</strong> · 远端: <strong id="self-remote-ver">自动检测中</strong></span>
           </div>
           <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
-            <button class="btn btn-sm" id="btn-check-self-update">🔍 检查自身</button>
             <button class="btn btn-primary btn-sm" id="btn-run-self-update" disabled>⚡ 无感热替换升级</button>
           </div>
         </div>
@@ -859,7 +858,7 @@
       </div>
       <div class="status-right-wrap">
         <button class="btn-self-update-pill" id="btn-self-update-pill" title="检测到 GitHub 新版本，点击立即执行无感影子热替换并自动重启"></button>
-        <div style="font-size: 12.5px; font-weight: 600; color: var(--text-muted); white-space: nowrap;" id="status-right">AideRun v1.3.11 · 右键托盘多开</div>
+        <div style="font-size: 12.5px; font-weight: 600; color: var(--text-muted); white-space: nowrap;" id="status-right">AideRun v1.3.12 · 右键托盘多开</div>
         <button class="icon-link-btn" id="btn-open-github" title="访问 GitHub 开源仓库 (ZhangSir9901/AideRun)" aria-label="访问 GitHub 开源仓库">
           <svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
             <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
@@ -1105,10 +1104,13 @@
   document.getElementById('btn-open-github').onclick = () => post('open_github_repo');
   document.getElementById('btn-self-update-pill').onclick = triggerSelfUpdate;
   document.getElementById('btn-run-self-update').onclick = triggerSelfUpdate;
-  document.getElementById('btn-check-self-update').onclick = () => {
-    document.getElementById('self-remote-ver').textContent = '检测中...';
-    post('check_self_update', { force: true });
-  };
+  const btnCheckSelf = document.getElementById('btn-check-self-update');
+  if (btnCheckSelf) {
+    btnCheckSelf.onclick = () => {
+      document.getElementById('self-remote-ver').textContent = '检测中...';
+      post('check_self_update', { force: true });
+    };
+  }
   document.getElementById('btn-self-upd-close').onclick = () => selfUpdModal.classList.remove('open');
   document.getElementById('btn-self-upd-retry').onclick = triggerSelfUpdate;
 
@@ -1437,8 +1439,12 @@
   window.addEventListener('DOMContentLoaded', () => {
     post('init_state');
     setTimeout(() => {
-      post('check_self_update', { force: false });
+      post('check_self_update', { force: false, heartbeat: true });
     }, 1200);
+    // 定时静默心跳检测自身新版（每 60 秒触发一次，发现新版立即激活升级按钮）
+    setInterval(() => {
+      post('check_self_update', { force: true, heartbeat: true });
+    }, 60000);
   });
 </script>
 </body>

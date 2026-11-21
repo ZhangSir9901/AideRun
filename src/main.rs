@@ -137,6 +137,11 @@ fn main() {
         self_update::cleanup_old_self_binaries();
     }
 
+    // 启动即时全自动巡检：强制检查遥测并物理关闭（若用户在 IDE 内部篡改开启，立即覆写回关闭）
+    if let Ok(paths) = PortablePaths::discover() {
+        let _ = bootstrap::enforce_disable_telemetry(&paths);
+    }
+
     // 1. 默认双击无参数，或显式传入 `panel` / `gui` 时，弹出 860x560 水晶玻璃拟态控制面板（选项 A）
     if filtered_args.is_empty() || matches!(filtered_args[0].as_str(), "panel" | "gui") {
         let attached = init_console(
@@ -186,6 +191,9 @@ fn main() {
 fn run_silent_launch(raw_args: &[String]) -> Result<()> {
     let paths = PortablePaths::discover()?;
     let cfg = LauncherConfig::load_or_default(&paths.launcher_config);
+
+    // 启动前强制检查遥测并物理关闭
+    let _ = bootstrap::enforce_disable_telemetry(&paths);
 
     // 解析可选 `--silent` / `-s` 与 `--instance <名称>`
     let mut instance_name: Option<String> = None;
